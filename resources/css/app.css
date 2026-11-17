@@ -1,0 +1,490 @@
+/* ===================================================================
+   TOKO TABITA - Stylesheet Utama
+   Sumber: Bootstrap 5.3 + Bootstrap Icons
+   Arah visual: "Atelier" - hangat, rapi, editorial
+   (krem, blush, beige, cokelat moka)
+   =================================================================== */
+
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+/* -------------------------------------------------------------------
+   1. VARIABEL TEMA
+   ------------------------------------------------------------------- */
+:root {
+    --pos-primary: #bd777c;
+    --pos-primary-dark: #a65e63;
+    --pos-sidebar-width: 250px;
+    --pos-sidebar-bg: #33261f;
+    --pos-sidebar-bg-hover: #42332b;
+    --pos-sidebar-text: #f3e8de;
+    --pos-sidebar-text-active: #ffffff;
+    --pos-surface: #fff9f7;
+    --pos-border: #ead7d1;
+    --pos-cash: #4e7a5a;
+    --pos-danger: #a8434b;
+
+    --tabita-ink: #242020;
+    --tabita-muted: #77716f;
+    --tabita-card: #ffffff;
+    --tabita-blush: #e8c3c1;
+    --tabita-beige: #eadbd2;
+    --tabita-rose: #bd777c;
+    --tabita-rose-soft: #f9e6e6;
+    --tabita-sidebar: #33261f;
+    --tabita-sidebar-text: #f3e8de;
+    --tabita-success: #4e7a5a;
+    --tabita-danger: #a8434b;
+}
+
+/* -------------------------------------------------------------------
+   2. DASAR / TYPOGRAFI
+   ------------------------------------------------------------------- */
+body {
+    background-color: var(--pos-surface);
+    font-family: "Poppins", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.925rem;
+    color: var(--tabita-ink);
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+    color: var(--tabita-ink);
+    letter-spacing: -0.01em;
+}
+
+.text-muted-2 {
+    color: var(--tabita-muted) !important;
+}
+
+.font-money {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* -------------------------------------------------------------------
+   3. LAYOUT SIDEBAR + KONTEN
+   ------------------------------------------------------------------- */
+.pos-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.pos-sidebar {
+    width: var(--pos-sidebar-width);
+    flex: 0 0 var(--pos-sidebar-width);
+    background-color: var(--pos-sidebar-bg);
+    color: var(--pos-sidebar-text);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 1030;
+    transition: transform 0.25s ease;
+}
+
+.pos-sidebar .sidebar-brand {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.pos-sidebar .sidebar-brand i {
+    font-size: 1.5rem;
+    color: var(--pos-primary);
+}
+
+.pos-sidebar .nav-section {
+    padding: 1rem 1.25rem 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a89384;
+}
+
+.pos-sidebar .nav-link {
+    color: var(--pos-sidebar-text);
+    padding: 0.55rem 1.25rem;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+}
+
+.pos-sidebar .nav-link i {
+    font-size: 1.05rem;
+    width: 1.25rem;
+    text-align: center;
+}
+
+.pos-sidebar .nav-link:hover {
+    background-color: var(--pos-sidebar-bg-hover);
+    color: #fff;
+}
+
+.pos-sidebar .nav-link.active {
+    background-color: var(--pos-sidebar-bg-hover);
+    color: var(--pos-sidebar-text-active);
+    border-left-color: var(--pos-primary);
+    font-weight: 600;
+}
+
+/* Menu yang belum diimplementasikan: non-klik, tampil redup + badge "Segera". */
+.pos-sidebar .nav-link.pos-menu-soon {
+    color: #a89384;
+    cursor: default;
+    font-size: 0.85rem;
+}
+
+.pos-sidebar .nav-link.pos-menu-soon:hover {
+    background-color: transparent;
+    color: #a89384;
+}
+
+.pos-sidebar .nav-link.pos-menu-soon .badge {
+    font-size: 0.6rem;
+    padding: 0.2em 0.45em;
+}
+
+.pos-main {
+    flex: 1 1 auto;
+    margin-left: var(--pos-sidebar-width);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pos-topbar {
+    background-color: var(--tabita-card, #fffefc);
+    border-bottom: 1px solid var(--pos-border);
+    padding: 0.6rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.pos-content {
+    padding: 1.25rem;
+    flex: 1 1 auto;
+}
+
+.pos-sidebar-toggle {
+    display: none;
+}
+
+/* Latar gelap di belakang sidebar saat mode drawer (tablet/HP). */
+.pos-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(51, 38, 31, 0.45);
+    z-index: 1025;
+}
+
+.pos-sidebar.show + .pos-sidebar-backdrop {
+    display: block;
+}
+
+/* -------------------------------------------------------------------
+   4. KARTU RINGKASAN (STAT CARD)
+   ------------------------------------------------------------------- */
+.stat-card {
+    background-color: #fffefc;
+    border: 1px solid var(--pos-border);
+    border-radius: 0.6rem;
+    padding: 1rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    height: 100%;
+}
+
+.stat-card .stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex: 0 0 auto;
+}
+
+.stat-card .stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tabita-muted);
+    font-weight: 600;
+}
+
+.stat-card .stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--tabita-ink);
+    word-break: break-word;
+}
+
+.stat-card .stat-sub {
+    font-size: 0.78rem;
+    color: var(--tabita-muted);
+}
+
+/* -------------------------------------------------------------------
+   5. KOMPONEN LAIN
+   ------------------------------------------------------------------- */
+.card {
+    border: 1px solid var(--pos-border);
+    border-radius: 0.6rem;
+    box-shadow: 0 1px 2px rgba(46, 38, 34, 0.04);
+}
+
+.card-header {
+    background-color: #fffefc;
+    border-bottom: 1px solid var(--pos-border);
+    font-weight: 600;
+}
+
+.table > thead th {
+    background-color: #faf5f0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--tabita-muted);
+    border-bottom-width: 1px;
+    white-space: nowrap;
+}
+
+.table > tbody td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Halaman cetak (struk) */
+@media print {
+    .pos-sidebar,
+    .pos-topbar,
+    .no-print,
+    .pos-sidebar-toggle {
+        display: none !important;
+    }
+
+    .pos-main {
+        margin-left: 0 !important;
+    }
+
+    .pos-content {
+        padding: 0 !important;
+    }
+
+    body {
+        background-color: #fff !important;
+    }
+
+    .print-area {
+        width: 80mm !important;
+        margin: 0 auto !important;
+        font-size: 0.8rem;
+    }
+
+    @page {
+        margin: 5mm;
+    }
+}
+
+/* -------------------------------------------------------------------
+   6. RESPONSIF
+   ------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+    .pos-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .pos-sidebar.show {
+        transform: translateX(0);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .pos-main {
+        margin-left: 0;
+    }
+
+    .pos-sidebar-toggle {
+        display: inline-flex;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pos-content {
+        padding: 0.85rem;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.1rem;
+    }
+}
+
+/* -------------------------------------------------------------------
+   7. BRAND "ATELIER" - override Bootstrap mengikuti token tema
+   ------------------------------------------------------------------- */
+
+/* Aksi utama: mawar lembut, teks putih tetap kontras. */
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--tabita-rose);
+    --bs-btn-border-color: var(--tabita-rose);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--pos-primary-dark);
+    --bs-btn-hover-border-color: var(--pos-primary-dark);
+    --bs-btn-focus-shadow-rgb: 138, 75, 94;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--pos-primary-dark);
+    --bs-btn-active-border-color: var(--pos-primary-dark);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--tabita-rose);
+    --bs-btn-disabled-border-color: var(--tabita-rose);
+}
+
+.btn-light {
+    --bs-btn-color: var(--tabita-ink);
+    --bs-btn-bg: #fffefc;
+    --bs-btn-border-color: var(--pos-border);
+    --bs-btn-hover-color: var(--tabita-ink);
+    --bs-btn-hover-bg: var(--tabita-rose-soft);
+    --bs-btn-hover-border-color: var(--tabita-beige);
+    --bs-btn-active-color: var(--tabita-ink);
+    --bs-btn-active-bg: var(--tabita-rose-soft);
+    --bs-btn-active-border-color: var(--tabita-beige);
+}
+
+.btn-outline-light {
+    --bs-btn-color: var(--pos-sidebar-text);
+    --bs-btn-border-color: rgba(255, 255, 255, 0.25);
+    --bs-btn-hover-color: var(--pos-sidebar-bg);
+    --bs-btn-hover-bg: var(--pos-sidebar-text);
+    --bs-btn-hover-border-color: var(--pos-sidebar-text);
+    --bs-btn-active-color: var(--pos-sidebar-bg);
+    --bs-btn-active-bg: var(--pos-sidebar-text);
+    --bs-btn-active-border-color: var(--pos-sidebar-text);
+}
+
+/* Warna utilitas Bootstrap mengikuti brand. */
+.text-primary { color: var(--tabita-rose) !important; }
+.bg-primary { background-color: var(--tabita-rose) !important; }
+.border-primary { border-color: var(--tabita-rose) !important; }
+.link-primary { color: var(--tabita-rose) !important; }
+.link-primary:hover, .link-primary:focus { color: var(--pos-primary-dark) !important; }
+
+.text-success { color: var(--tabita-success) !important; }
+.text-danger { color: var(--tabita-danger) !important; }
+.text-dark { color: var(--tabita-ink) !important; }
+
+.badge.text-bg-primary { background-color: var(--tabita-rose) !important; color: #fff !important; }
+.badge.text-bg-success { background-color: var(--tabita-success) !important; }
+.badge.text-bg-danger { background-color: var(--tabita-danger) !important; }
+.badge.text-bg-secondary { background-color: #d8ccc2 !important; color: var(--tabita-ink) !important; }
+.badge.text-bg-dark { background-color: #4a3a32 !important; }
+.badge.text-bg-light { background-color: #faf5f0 !important; color: var(--tabita-ink) !important; }
+
+/* Tautan di konten: mawar, hover lebih dalam. */
+a { color: var(--tabita-rose); }
+a:hover { color: var(--pos-primary-dark); }
+
+/* Form: fokus yang terlihat jelas (aksesibilitas). */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--tabita-rose);
+    box-shadow: 0 0 0 0.2rem rgba(138, 75, 94, 0.18);
+}
+
+.form-check-input:focus {
+    border-color: var(--tabita-rose);
+    box-shadow: 0 0 0 0.2rem rgba(138, 75, 94, 0.18);
+}
+
+.form-check-input:checked {
+    background-color: var(--tabita-rose);
+    border-color: var(--tabita-rose);
+}
+
+/* Cincin fokus global untuk navigasi keyboard. */
+:focus-visible {
+    outline: 2px solid var(--tabita-rose);
+    outline-offset: 2px;
+}
+
+/* Paginasi */
+.page-link {
+    color: var(--tabita-rose);
+}
+.page-link:hover {
+    color: var(--pos-primary-dark);
+}
+.page-item.active .page-link {
+    background-color: var(--tabita-rose);
+    border-color: var(--tabita-rose);
+}
+
+/* Modal & dropdown mengikuti kartu. */
+.modal-content {
+    border: 1px solid var(--pos-border);
+    border-radius: 0.6rem;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--tabita-rose-soft);
+    color: var(--tabita-ink);
+}
+
+/* Elemen khas: garis jahitan (stitch). */
+.stitch {
+    border: 0;
+    border-top: 1px dashed var(--tabita-rose);
+    opacity: 0.55;
+}
+
+/* Kartu galeri: terangkat lembut saat hover (menjelaskan bahwa bisa dipilih). */
+.media-item {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.media-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(46, 38, 34, 0.12);
+}
+
+/* Foto utama: bingkai mawar sebagai penanda "Utama". */
+.media-primary-ring {
+    outline: 2px solid var(--tabita-rose);
+    outline-offset: 3px;
+}
+
+/* Hormati preferensi gerak rendah. */
+@media (prefers-reduced-motion: reduce) {
+    .media-item,
+    .pos-sidebar {
+        transition: none !important;
+    }
+    .media-item:hover {
+        transform: none;
+    }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150" role="img" aria-label="Ilustrasi garis gaun">
+  <g fill="none" stroke="#a9717b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 8 a4 4 0 1 1 4 4" opacity="0.9"/>
+    <path d="M60 14 v8"/>
+    <path d="M60 22 L42 30 L50 44 L56 40 L52 138 Q60 143 68 138 L64 40 L70 44 L78 30 Z" fill="#fdf3ee"/>
+    <path d="M50 44 Q60 52 70 44"/>
+    <path d="M56 40 Q60 46 64 40" opacity="0.6"/>
+    <path d="M45 96 Q60 104 75 96" opacity="0.55" stroke-dasharray="3 4"/>
+  </g>
+  <circle cx="60" cy="58" r="1.6" fill="#c8a2ab"/>
+  <circle cx="52" cy="76" r="1.6" fill="#c8a2ab"/>
+  <circle cx="68" cy="76" r="1.6" fill="#c8a2ab"/>
+  <circle cx="60" cy="112" r="1.6" fill="#c8a2ab"/>
+</svg>

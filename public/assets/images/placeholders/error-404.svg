@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg404" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff8f5"/>
+      <stop offset="100%" stop-color="#f5e8e2"/>
+    </linearGradient>
+    <filter id="shadow404" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#804a4e" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg404)" rx="20"/>
+  <circle cx="250" cy="160" r="110" fill="#fcf3ee" stroke="#eadbd2" stroke-width="2"/>
+  
+  <!-- Big Stylized 404 with dress mannequin in middle -->
+  <g filter="url(#shadow404)">
+    <text x="145" y="195" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="700" fill="#bd777c" text-anchor="middle">4</text>
+    <text x="355" y="195" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="700" fill="#bd777c" text-anchor="middle">4</text>
+    
+    <!-- Mannequin Dress as the '0' -->
+    <path d="M250 90 L250 115 M240 115 L260 115 L265 145 Q268 180 278 215 L222 215 Q232 180 235 145 Z" fill="#33261f"/>
+    <!-- Stand -->
+    <line x1="250" y1="215" x2="250" y2="245" stroke="#33261f" stroke-width="5" stroke-linecap="round"/>
+    <line x1="230" y1="245" x2="270" y2="245" stroke="#33261f" stroke-width="5" stroke-linecap="round"/>
+    <!-- Measuring tape drape -->
+    <path d="M236 130 Q250 150 264 135 Q268 155 240 185" fill="none" stroke="#e8b4b8" stroke-width="3" stroke-dasharray="4,2"/>
+  </g>
+  
+  <text x="250" y="295" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="20" font-weight="600" fill="#33261f">Halaman Tidak Ditemukan</text>
+  <text x="250" y="322" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="13" fill="#8c7e77">Busana yang kamu cari mungkin sudah berpindah koleksi</text>
+</svg>

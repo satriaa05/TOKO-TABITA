@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgHeart" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff8f5"/>
+      <stop offset="100%" stop-color="#f5e8e2"/>
+    </linearGradient>
+    <linearGradient id="roseHeart" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e3a7ab"/>
+      <stop offset="100%" stop-color="#bd777c"/>
+    </linearGradient>
+    <filter id="softShadowHeart" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#804a4e" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bgHeart)" rx="16"/>
+  <circle cx="200" cy="135" r="85" fill="#fcf3ee" stroke="#eadbd2" stroke-width="2"/>
+  
+  <g filter="url(#softShadowHeart)">
+    <path d="M200 178 C140 135, 145 95, 172 95 C186 95, 196 104, 200 114 C204 104, 214 95, 228 95 C255 95, 260 135, 200 178 Z" fill="url(#roseHeart)"/>
+    <!-- Stitch line inside heart -->
+    <path d="M200 168 C155 130, 155 105, 174 105 C185 105, 193 112, 200 122 C207 112, 215 105, 226 105 C245 105, 245 130, 200 168 Z" fill="none" stroke="#fff" stroke-dasharray="4,3" stroke-width="2" opacity="0.85"/>
+  </g>
+  
+  <text x="200" y="248" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="17" font-weight="600" fill="#33261f">Wishlist Belum Terisi</text>
+  <text x="200" y="268" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="12" fill="#8c7e77">Simpan gaun dan atasan favoritmu di sini</text>
+</svg>

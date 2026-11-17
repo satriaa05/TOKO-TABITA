@@ -1,0 +1,21 @@
+[build]
+builder = "docker"
+dockerfile = "Dockerfile"
+dockerContext = "."
+
+[deploy]
+startCommand = "/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[[services.postgres]]
+plan = "free"
+
+[[services.mysql]]
+plan = "free"
+
+[[services]]
+name = "toko-tabita-web"
+source = "."

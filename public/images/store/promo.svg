@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-label="Banner koleksi musim semi">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e7c4bb"/>
+      <stop offset="0.55" stop-color="#d9b1a7"/>
+      <stop offset="1" stop-color="#c49a92"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="360" fill="url(#pg)"/>
+  <path d="M0 296 q150 -26 300 0 t300 0 t300 0 t300 0 L1200 360 L0 360 Z" fill="#b9888e" opacity="0.5"/>
+
+  <!-- two dress silhouettes -->
+  <g fill="#fbf3ec" opacity="0.95" stroke="#8a4b5e" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M905 208 q-46 4 -72 -6 l-16 -30 q-30 -6 -54 8 l10 30 q-26 10 -22 36 q30 6 76 -4 l22 96 q-60 44 -128 46 q-14 40 100 40 q116 0 100 -40 q-58 -6 -100 -62 l16 -104 q44 10 78 2 l12 -40 Z"/>
+    <path d="M1108 202 q-30 6 -46 -4 l-10 -26 q-22 -4 -36 8 l8 28 q-18 8 -16 28 q20 6 54 -2 l12 74 q-40 32 -88 34 q-10 32 74 32 q86 0 74 -32 q-48 -5 -88 -52 l12 -74 q30 6 48 2 l8 -36 Z" opacity="0.9"/>
+  </g>
+
+  <!-- botanical leaves right -->
+  <g stroke="#7c3f4e" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.75">
+    <path d="M1180 96 q-18 66 -6 128"/><path d="M1186 108 q-6 16 -18 24 M1183 86 q-4 14 4 22"/><path d="M1160 62 q2 14 -6 22 M1164 70 q0 12 8 16"/>
+  </g>
+</svg>

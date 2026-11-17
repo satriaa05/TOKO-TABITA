@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 560" role="img" aria-label="Ilustrasi wanita elegan memakai busana brand Modiste">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8ece7"/>
+      <stop offset="1" stop-color="#f3ddd3"/>
+    </linearGradient>
+    <linearGradient id="arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8c8c3"/>
+      <stop offset="1" stop-color="#d8b3ad"/>
+    </linearGradient>
+    <linearGradient id="dress" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f2e5da"/>
+    </linearGradient>
+    <radialGradient id="soft" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0" stop-color="#fff7f2"/>
+      <stop offset="1" stop-color="#e9ccc5"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="520" height="560" fill="url(#bg)"/>
+
+  <!-- Royal arch backdrop -->
+  <path d="M260 30 C155 30 92 128 92 244 L92 560 L428 560 L428 244 C428 128 365 30 260 30 Z" fill="url(#arch)" opacity="0.55"/>
+  <path d="M260 62 C168 62 118 148 118 248 L118 560 L402 560 L402 248 C402 148 352 62 260 62 Z" fill="url(#soft)" opacity="0.6"/>
+
+  <!-- Botanical sprigs -->
+  <g stroke="#a9717b" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.9">
+    <path d="M470 130 q-34 122 -12 250"/><path d="M470 140 q-6 26 -22 38 M462 132 q-2 24 8 34"/><path d="M461 92 q-30 118 -10 245"/><path d="M452 152 q-8 20 -24 30 M443 122 q0 20 12 28"/><path d="M55 132 q30 118 12 248"/><path d="M63 152 q8 20 24 30 M71 124 q0 20 -12 28"/><path d="M48 84 q2 24 -8 34 M57 92 q-2 26 22 38"/>
+  </g>
+  <g fill="#b98a92" opacity="0.85">
+    <ellipse cx="448" cy="180" rx="7" ry="4" transform="rotate(-40 448 180)"/><ellipse cx="455" cy="238" rx="7" ry="4" transform="rotate(-35 455 238)"/><ellipse cx="443" cy="296" rx="7" ry="4" transform="rotate(-30 443 296)"/><ellipse cx="459" cy="140" rx="6.4" ry="3.6" transform="rotate(-30 459 140)"/>
+    <ellipse cx="70" cy="178" rx="7" ry="4" transform="rotate(38 70 178)"/><ellipse cx="62" cy="234" rx="7" ry="4" transform="rotate(35 62 234)"/><ellipse cx="74" cy="292" rx="7" ry="4" transform="rotate(28 74 292)"/><ellipse cx="58" cy="138" rx="6.4" ry="3.6" transform="rotate(28 58 138)"/>
+  </g>
+
+  <!-- Woman: head & hair -->
+  <circle cx="260" cy="150" r="34" fill="#e6b497"/>
+  <path d="M226 146 q-10 82 6 176 q14 12 22 4 q-4 -84 14 -130 Z" fill="#2c2320"/>
+  <path d="M294 146 q10 82 -6 176 q-14 12 -22 4 q4 -84 -14 -130 Z" fill="#2c2320"/>
+  <path d="M232 128 q28 -22 56 0 q-8 -38 -28 -38 q-20 0 -28 38 Z" fill="#2c2320"/>
+
+  <!-- Face detail: closed eyes & smile -->
+  <path d="M244 150 q7 6 14 0 M262 150 q7 6 14 0" stroke="#2c2320" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M252 168 q8 5 16 0" stroke="#a9717b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <circle cx="240" cy="162" r="2.2" fill="#e8a9a4" opacity="0.8"/><circle cx="280" cy="162" r="2.2" fill="#e8a9a4" opacity="0.8"/>
+
+  <!-- Gold earring -->
+  <circle cx="226" cy="162" r="3" fill="#d4a24e"/><circle cx="294" cy="162" r="3" fill="#d4a24e"/>
+
+  <!-- Neck -->
+  <rect x="252" y="180" width="16" height="18" fill="#e6b497"/>
+
+  <!-- Dress body -->
+  <path d="M206 210 q54 -18 108 0 q10 10 8 34 q-2 16 -14 24 q30 96 44 168 q-92 34 -184 0 q14 -72 44 -168 q-12 -8 -14 -24 q-2 -24 8 -34 Z" fill="url(#dress)" stroke="#cbb0a3" stroke-width="1.4"/>
+  <path d="M236 214 q24 10 48 0" stroke="#b99a8c" stroke-width="2" fill="none"/>
+  <path d="M232 260 q28 12 56 0" stroke="#111111" stroke-width="3.4" fill="none" opacity="0.75"/>
+
+  <!-- Arms -->
+  <path d="M210 236 q-26 64 -6 118" stroke="#e6b497" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M310 236 q26 64 6 118" stroke="#e6b497" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+  <!-- Lace dots on skirt -->
+  <g fill="#ead6cd" opacity="0.9">
+    <circle cx="260" cy="330" r="2.4"/><circle cx="226" cy="356" r="2.4"/><circle cx="294" cy="356" r="2.4"/><circle cx="258" cy="380" r="2.4"/><circle cx="206" cy="376" r="2.4"/><circle cx="312" cy="376" r="2.4"/><circle cx="234" cy="414" r="2.4"/><circle cx="286" cy="414" r="2.4"/>
+  </g>
+</svg>

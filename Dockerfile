@@ -1,6 +1,7 @@
 FROM php:8.3-fpm
 
 # Install sistem dependencies dan ekstensi PHP
+# (pdo_pgsql dibutuhkan untuk Render Postgres; pdo_mysql dipertahankan)
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,12 +12,13 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libpq-dev \
     zip \
     unzip \
     nginx \
     supervisor \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring exif pcntl bcmath gd intl zip \
+    && docker-php-ext-install -j$(nproc) pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd intl zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apt-get clean \
@@ -44,11 +46,12 @@ RUN mkdir -p storage/framework/views storage/framework/cache storage/framework/s
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-# Konfigurasi Supervisor untuk queue worker (opsional)
+# Konfigurasi Supervisor dan entrypoint (port + migrasi + cache)
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /usr/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh
 
-# Expose port
+# Expose port (Render mengeset $PORT; default 80)
 EXPOSE 80
 
-# Start Nginx + PHP-FPM + Supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/entrypoint.sh"]

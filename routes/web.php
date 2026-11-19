@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\OrderController;
@@ -108,6 +109,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('pembayaran/{sale}/cek-status', [StoreController::class, 'checkPaymentStatus'])
         ->middleware('throttle:20,1')
         ->name('store.payment.status');
+    Route::post('pembayaran/{sale}/qr-baru', [StoreController::class, 'refreshQris'])
+        ->middleware('throttle:5,1')
+        ->name('store.payment.refresh');
     Route::get('pesanan/selesai/{sale}', [StoreController::class, 'orderSuccess'])->name('store.orderSuccess');
     Route::get('pesanan-saya', [StoreController::class, 'buyerOrders'])->name('store.orders.index');
     Route::get('pesanan-saya/{sale}', [StoreController::class, 'buyerOrder'])->name('store.orders.show');
@@ -279,6 +283,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('admin.')
         ->group(function () {
             Route::get('tampilan', [MediaController::class, 'siteIndex'])->middleware('permission:media.manage')->name('media.site');
+
+            Route::get('audit-log', [AuditLogController::class, 'index'])
+                ->middleware('permission:reports.view')->name('audit-logs.index');
 
             Route::post('tampilan/{role}', [MediaController::class, 'storeSite'])
                 ->whereIn('role', ['logo', 'banner_home', 'banner_promo', 'collection'])

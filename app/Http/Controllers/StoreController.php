@@ -441,6 +441,32 @@ class StoreController extends Controller
     }
 
     /**
+     * Buat ulang QR/reference pembayaran otomatis yang kedaluwarsa.
+     */
+    public function refreshQris(Sale $sale): RedirectResponse
+    {
+        abort_unless((int) $sale->user_id === (int) auth()->id(), 403);
+
+        $transaction = $sale->paymentTransactions()->first();
+
+        if (! $transaction || ! $transaction->channel->isAutomatic() || ! $transaction->isExpired()) {
+            return back()->with('error', 'QR pembayaran belum kedaluwarsa atau tidak tersedia.');
+        }
+
+        if (! $this->midtrans->isConfigured()) {
+            return back()->with('error', 'Payment gateway belum dikonfigurasi Admin.');
+        }
+
+        try {
+            $this->midtrans->refresh($transaction);
+
+            return back()->with('success', 'QR pembayaran baru berhasil dibuat. Silakan bayar sebelum batas waktu baru.');
+        } catch (PaymentGatewayException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * Halaman lacak pengiriman untuk pesanan milik pelanggan.
      */
     public function tracking(Sale $sale): View

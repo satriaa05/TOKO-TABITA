@@ -209,18 +209,21 @@ Ketik `exit` untuk keluar.
 
 ---
 
-## 7. Cron Job (opsional)
+## 7. Cron Job (disarankan)
 
 Email notifikasi **dikirim langsung (sinkron)** oleh aplikasi, jadi **tidak perlu queue worker**.
-Ini penting karena banyak hosting shared membatasi cron minimal 15 menit.
+Namun scheduler kini menjalankan `payments:sync-pending` tiap 10 menit (fallback bila webhook
+Midtrans tidak sampai) dan `media:prune` harian. Tanpa cron, sinkronisasi hanya terjadi saat
+halaman pembayaran dibuka.
 
-Kalau mau tetap menambahkan cron untuk scheduler Laravel (tidak wajib):
+Tambahkan cron berikut di cPanel:
 
 ```cron
-*/15 * * * * cd /home/user/tabita && /usr/bin/php artisan schedule:run >/dev/null 2>&1
+*/5 * * * * cd /home/user/tabita && /usr/bin/php artisan schedule:run >/dev/null 2>&1
 ```
 
-Interval 15 menit sudah diterima paket **Medium** Rumahweb. Paket **Large** (5 menit) tidak diperlukan.
+Interval 5 menit disarankan agar fallback pembayaran maksimal 10 menit. Paket **Medium**
+Rumahweb biasanya mengizinkan cron 15 menit; itu masih lebih baik daripada tidak sama sekali.
 
 Cek path PHP Anda dengan:
 
@@ -283,7 +286,7 @@ Dashboard → **Integrations → Webhook → Add Webhook**:
 | Error database | Koneksi MySQL salah | Cek DB_HOST/USER/PASS di `.env` |
 | Gambar tidak muncul | Symlink storage belum ada | `php artisan storage:link` |
 | Webhook tidak masuk | URL bukan HTTPS / maintenance mode | Cek SSL & matikan maintenance |
-| Email tidak terkirim | Cron/queue tidak jalan | Cek cron job & `storage/logs/laravel.log` |
+| Email tidak terkirim | `MAIL_MAILER` masih `log` / API key kosong | Cek `MAIL_MAILER=resend`, `RESEND_API_KEY`, dan domain terverifikasi |
 | 403 di webhook | Signature token beda | Samakan `BITESHIP_WEBHOOK_TOKEN` dengan dashboard |
 
 ---

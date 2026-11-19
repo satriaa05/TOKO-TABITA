@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Media;
 
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,7 @@ class TabitaMediaHttpSpecTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(PermissionSeeder::class);
         Storage::fake('public');
     }
 

@@ -15,8 +15,9 @@ class MidtransWebhookController extends Controller
         try {
             $service->handleWebhook((array) $request->json()->all());
         } catch (\Throwable $e) {
-            // Tetap balas 200 agar Midtrans tidak retry terus-menerus;
-            // kegagalan tercatat di log untuk ditindaklanjuti Admin.
+            // Tetap balas 200 agar Midtrans tidak retry tanpa henti, tetapi
+            // kegagalan wajib tercatat di PaymentWebhookLog untuk ditindaklanjuti.
+            $service->logFailure((array) $request->json()->all(), $e);
             Log::error('Gagal memproses webhook Midtrans: '.$e->getMessage());
         }
 

@@ -11,13 +11,24 @@ Set-Location $root
 
 $state = Join-Path $env:TEMP 'tabita-tunnel-url.txt'
 
+# Token webhook dibaca dari .env. Jangan pernah ditulis literal di script/docs.
+$envFile = Join-Path $root '.env'
+$webhookToken = (Get-Content $envFile -ErrorAction SilentlyContinue |
+    Where-Object { $_ -match '^BITESHIP_WEBHOOK_TOKEN=(.*)$' } |
+    Select-Object -Last 1) -replace '^BITESHIP_WEBHOOK_TOKEN=', ''
+if (-not $webhookToken) { $webhookToken = $env:BITESHIP_WEBHOOK_TOKEN }
+if (-not $webhookToken) {
+    Write-Host "FATAL: BITESHIP_WEBHOOK_TOKEN kosong di .env" -ForegroundColor Red
+    exit 1
+}
+
 function Test-TunnelUrl {
     param([string]$Url)
     if (-not $Url) { return $false }
     try {
         $r = Invoke-WebRequest -Uri "$Url/shipping/biteship/webhook" `
             -Method POST `
-            -Headers @{ 'Tabita-Modiste-Signature' = 'tabita-rahasia-2026' } `
+            -Headers @{ 'Tabita-Modiste-Signature' = $webhookToken } `
             -ContentType 'application/json' `
             -Body '{"event":"ping"}' `
             -UseBasicParsing -TimeoutSec 12
@@ -38,7 +49,7 @@ function Show-Info {
     Write-Host "Di Biteship: Integrasi -> Webhook -> Add Webhook"
     Write-Host "Events : order.status, order.waybill_id, order.price"
     Write-Host "Header : Tabita-Modiste-Signature"
-    Write-Host "Secret : tabita-rahasia-2026"
+    Write-Host "Secret : dari .env (BITESHIP_WEBHOOK_TOKEN) — jangan dibagikan"
     Write-Host ""
     Write-Host "CATATAN: URL berubah kalau tunnel dibuat ulang."
     Write-Host "Jangan tutup jendela proses sampai selesai uji coba."

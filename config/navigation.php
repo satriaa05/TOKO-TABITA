@@ -49,6 +49,10 @@ return [
             'type' => 'item', 'label' => 'Kategori', 'icon' => 'bi-tags',
             'route' => 'admin.categories.index',
         ],
+        [
+            'type' => 'item', 'label' => 'Jejak Audit', 'icon' => 'bi-clock-history',
+            'route' => 'admin.audit-logs.index',
+        ],
 
         ['type' => 'section', 'label' => 'Tampilan'],
 
@@ -87,6 +91,13 @@ return [
             'label' => 'Kelola Akun',
             'icon' => 'bi-people',
             'route' => 'owner.users.index',
+        ],
+
+        [
+            'type' => 'item',
+            'label' => 'Jejak Audit',
+            'icon' => 'bi-clock-history',
+            'route' => 'admin.audit-logs.index',
         ],
 
         [

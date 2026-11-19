@@ -2,10 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\UserRole;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -27,23 +25,17 @@ class EnsurePermission
             abort(403, 'Akun Anda tidak aktif.');
         }
 
-        if ($user->role === UserRole::Owner) {
+        if ($user->isOwner()) {
             return $next($request);
         }
 
-        $query = DB::table('role_permissions')
-            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
-            ->where('role_permissions.role', $user->role?->value);
-
-        // Jika permission belum pernah dikonfigurasi untuk role ini,
-        // jangan mengunci seluruh fitur (kompatibilitas data lama).
-        if (! (clone $query)->exists()) {
-            return $next($request);
-        }
-
-        $allowed = (clone $query)->where('permissions.key', $permission)->exists();
-
-        abort_unless($allowed, 403, 'Anda tidak memiliki izin untuk melakukan aksi ini.');
+        // Default deny: bila permission belum ada di role_permissions, akses
+        // ditolak. Owner tetap penuh; Admin hanya izin yang eksplisit.
+        abort_unless(
+            $user->hasPermission($permission),
+            403,
+            'Anda tidak memiliki izin untuk melakukan aksi ini.'
+        );
 
         return $next($request);
     }

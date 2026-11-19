@@ -198,7 +198,7 @@ tests/Feature/... (lihat daftar di bagian 4)
 cd "C:\Users\LENOVO\Documents\TOKO TABITA"
 php -v                       # harus 8.5.x
 npm run build                # sudah pernah dijalankan; public/build ada
-php artisan test             # 167 passed, 815 assertions
+php artisan test             # 177 passed, 851 assertions
 php artisan view:clear
 php artisan serve
 npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhook
@@ -245,4 +245,20 @@ npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhoo
 - Perbaikan keranjang: hapus satu baris & tambah qty berfungsi, termasuk key lama.
 - Owner default direset: `owner@tokotabita.test` / `Tabita-Owner-123`.
 - Panduan: `docs/PANDUAN-MULTIUSER-GALERI.md`.
+
+---
+
+## 13. Keamanan & state machine (19 Nov 2026, lanjut)
+
+- Token webhook Biteship dirotasi; nilai hanya di `.env`, wajib di-update di dashboard Biteship.
+- `TRUSTED_PROXIES` default kosong → `X-Forwarded-*` tidak dipercaya sembarangan.
+- Produksi: `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`, `SEED_DEMO=false`.
+- Webhook Midtrans/Biteship yang gagal tetap tercatat di `PaymentWebhookLog`.
+- Status pembayaran bersifat terminal: `expire/deny` tidak menimpa `Paid`;
+  `settlement` terlambat memotong stok ulang tepat sekali.
+- Charge Midtrans dilock; QR kedaluwarsa bisa dibuat ulang dari halaman pembayaran.
+- Scheduler `payments:sync-pending` menutup celah webhook yang tidak sampai.
+- Permission default-deny; Admin tanpa `role_permissions` tidak mendapat akses.
+- Jejak Audit tersedia di `/admin/audit-log` untuk Admin & Owner.
+- Test: **177 passed / 851 assertions**.
 

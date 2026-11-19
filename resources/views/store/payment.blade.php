@@ -56,6 +56,14 @@
                                     <strong>{{ $transaction->expired_at?->translatedFormat('d M Y H:i') ?? 'Menunggu data provider' }}</strong>
                                 </div>
                             </div>
+                            @if ($transaction->isExpired())
+                                <form method="POST" action="{{ route('store.payment.refresh', $sale) }}" class="mt-3">
+                                    @csrf
+                                    <button type="submit" class="st-btn st-btn-outline w-100 justify-content-center">
+                                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Buat QR Pembayaran Baru
+                                    </button>
+                                </form>
+                            @endif
                             <div class="alert alert-light border small mt-3 mb-0">
                                 Buka aplikasi pembayaran Anda, scan QR di atas, lalu konfirmasi nominal yang tertera.
                                Status akan berubah otomatis setelah notifikasi dari payment gateway diterima dan diverifikasi.

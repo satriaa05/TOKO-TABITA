@@ -39,8 +39,8 @@ return [
     ],
 
     /*
-     * Katalog kurir yang ditampilkan di checkout. Tarif masih dihitung
-     * manual dari config('pos.shipping') sampai API Biteship terhubung.
+     * Katalog kurir yang ditampilkan di checkout. Tarif diambil dari Biteship
+     * bila API tersedia, dengan fallback tarif manual config('pos.shipping').
      * Jangan menampilkan estimasi hari dari katalog ini.
      */
     'couriers' => [

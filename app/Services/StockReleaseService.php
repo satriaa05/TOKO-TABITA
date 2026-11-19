@@ -69,6 +69,50 @@ class StockReleaseService
     }
 
     /**
+     * Potong stok lagi setelah pembayaran baru datang saat transaksi sebelumnya
+     * sudah dianggap gagal/expired dan stok sudah dikembalikan.
+     */
+    public function reReserve(Sale $sale, ?string $note = null): bool
+    {
+        return DB::transaction(function () use ($sale, $note) {
+            /** @var Sale $fresh */
+            $fresh = Sale::query()
+                ->with('items')
+                ->lockForUpdate()
+                ->findOrFail($sale->id);
+
+            if ($fresh->stock_released_at === null) {
+                return false;
+            }
+
+            foreach ($fresh->items as $item) {
+                $qty = (int) $item->qty;
+
+                if ($qty <= 0) {
+                    continue;
+                }
+
+                $this->stock->apply(
+                    product: $item->product,
+                    qty: -$qty,
+                    type: StockMovementType::Sale,
+                    user: null,
+                    note: $note ?? 'Stok dipotong ulang karena pembayaran '.$fresh->invoice_number.' akhirnya diterima.',
+                    refType: 'sale',
+                    refId: $fresh->id,
+                    variant: $this->resolveVariant($item),
+                    color: $item->color,
+                    size: $item->size,
+                );
+            }
+
+            $fresh->update(['stock_released_at' => null]);
+
+            return true;
+        });
+    }
+
+    /**
      * Varian diambil dari product_variant_id bila tersedia; untuk data lama
      * fallback ke pasangan warna+ukuran yang tersimpan di sale_items.
      */

@@ -84,7 +84,7 @@ cd "C:\Users\LENOVO\Documents\TOKO TABITA"
 & 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test
 ```
 
-Hasil terakhir: **167 test, 167 passed, 815 assertions**.
+Hasil terakhir: **177 test, 177 passed, 851 assertions**.
 
 Uji konkurensi HTTP sungguhan:
 
@@ -101,3 +101,14 @@ Fokus test:
 
 > Uji konkurensi lintas proses sudah dijalankan lewat `scripts/concurrency-checkout.ps1` dengan
 > 5 server dan SQLite WAL. Di MySQL produksi, `lockForUpdate` bekerja per baris.
+
+## 8. Catatan keamanan tambahan
+
+- Token webhook Biteship sudah dirotasi; ambil nilainya dari `.env` (`BITESHIP_WEBHOOK_TOKEN`)
+  dan update di dashboard Biteship. Jangan bagikan/catam di dokumen.
+- Akses Admin sekarang **default deny**: tanpa baris `role_permissions`, semua halaman Admin ditolak.
+- Owner tetap memiliki akses penuh, termasuk halaman Jejak Audit di `/admin/audit-log`.
+- QR pembayaran yang kedaluwarsa bisa dibuat ulang dari halaman pembayaran (tombol
+  **Buat QR Pembayaran Baru**). Reference lama tidak dipakai ulang.
+- Status pembayaran bersifat terminal: webhook `expire` terlambat tidak akan membatalkan
+  transaksi yang sudah lunas; pembayaran yang masuk setelah expired memotong stok ulang.

@@ -18,9 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
     // Perintah artisan di app/Console/Commands (mis. media:prune).
     ->withCommands()
     ->withMiddleware(function (Middleware $middleware) {
-        // Aplikasi dapat diakses lewat reverse proxy (mis. saat deploy).
-        // Percayai header X-Forwarded-* agar URL aset memakai HTTPS.
-        $middleware->trustProxies(at: '*');
+        // Hanya percayai proxy yang ditentukan di TRUSTED_PROXIES (comma-separated
+        // IP/CIDR). Kosong = tidak mempercayai X-Forwarded-* sama sekali, supaya
+        // IP tidak bisa dipalsukan untuk bypass throttle login.
+        $trusted = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_PROXIES', ''))
+        )));
+
+        $middleware->trustProxies(at: $trusted);
 
         $middleware->alias([
             // Pembatasan akses berbasis peran: ->middleware('role:admin')

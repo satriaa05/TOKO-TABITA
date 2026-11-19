@@ -19,7 +19,7 @@ php artisan config:cache
 php artisan view:clear
 
 # Seed data demo (idempotent — updateOrCreate) supaya toko langsung terisi.
-if [ "${SEED_DEMO:-true}" = "true" ]; then
+if [ "${SEED_DEMO:-false}" = "true" ]; then
     php artisan db:seed --force
 fi
 

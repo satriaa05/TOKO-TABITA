@@ -9,7 +9,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
-    healthCheckPath: /katalog
+    healthCheckPath: /up
     envVars:
       - key: APP_NAME
         value: Tabita Modiste
@@ -55,10 +55,10 @@ services:
         sync: false
       - key: GOOGLE_REDIRECT_URI     # https://<domain-anda>.onrender.com/login/google/callback
         sync: false
-      - key: TABITA_STORE_PHONE      # nomor WA toko, mis. 628xxxxxxxxxx
+      - key: TABITA_STORE_WHATSAPP  # nomor WA toko, mis. 628xxxxxxxxxx
         sync: false
       - key: SEED_DEMO
-        value: "true"
+        value: "false"
 
 databases:
   - name: tabita-db

@@ -222,6 +222,7 @@ class RouteHealthMatrixTest extends TestCase
             'edit promo' => '/admin/promo/'.$this->promotion->id.'/edit',
             'tambah promo' => '/admin/promo/tambah',
             'tampilan toko' => '/admin/tampilan',
+            'jejak audit' => '/admin/audit-log',
 
             'dashboard owner' => '/owner/dashboard',
             'monitoring owner' => '/owner/monitoring',

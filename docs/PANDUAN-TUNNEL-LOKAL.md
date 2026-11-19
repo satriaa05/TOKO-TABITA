@@ -12,10 +12,14 @@ Panduan ini dipakai **sambil menunggu hosting + domain dibeli**. Website bisa di
 | URL publik sementara | `https://silence-furniture-gale-sculpture.trycloudflare.com` |
 | Webhook Biteship | `https://silence-furniture-gale-sculpture.trycloudflare.com/shipping/biteship/webhook` |
 | Header Signature Key | `Tabita-Modiste-Signature` |
-| Header Signature Secret | `tabita-rahasia-2026` |
+| Header Signature Secret | `<token dari BITESHIP_WEBHOOK_TOKEN>` |
 | Status verifikasi | ✅ Home `200`, ✅ Webhook `200 OK` |
 
 > URL `trycloudflare.com` **berubah hanya kalau tunnel dibuat ulang**. Script `tunnel-lokal.ps1` sekarang otomatis memakai ulang URL yang masih hidup, jadi tidak perlu daftar webhook ulang setiap kali script dijalankan.
+
+> **Rotasi token:** secret webhook sudah diganti dan tidak lagi ditulis di dokumentasi/script.
+> Nilai aslinya hanya ada di `.env` (`BITESHIP_WEBHOOK_TOKEN`). Update header secret di dashboard
+> Biteship dengan nilai terbaru dari `.env`; jangan bagikan nilainya di chat atau commit.
 
 ---
 
@@ -65,7 +69,7 @@ Dashboard Biteship → **Integrasi → Webhook → Tambah Webhook**:
 | URL | `https://silence-furniture-gale-sculpture.trycloudflare.com/shipping/biteship/webhook` |
 | Events | `order.status`, `order.waybill_id`, `order.price` |
 | Header Signature Key | `Tabita-Modiste-Signature` |
-| Header Signature Secret | `tabita-rahasia-2026` |
+| Header Signature Secret | `<token dari BITESHIP_WEBHOOK_TOKEN>` |
 
 Klik **Save**. Tunggu 1–2 menit.
 
@@ -80,7 +84,7 @@ APP_URL=http://127.0.0.1:8000
 APP_TIMEZONE=Asia/Jakarta
 
 BITESHIP_API_KEY=
-BITESHIP_WEBHOOK_TOKEN=tabita-rahasia-2026
+BITESHIP_WEBHOOK_TOKEN=<token dari .env>
 BITESHIP_WEBHOOK_HEADER=Tabita-Modiste-Signature
 BITESHIP_WEBHOOK_URL=https://silence-furniture-gale-sculpture.trycloudflare.com/shipping/biteship/webhook
 TABITA_STORE_POSTAL_CODE=50131
@@ -114,7 +118,7 @@ Webhook Biteship **hanya kirim kalau ada order pengiriman**. Caranya:
 Bisa kirim POST manual ke webhook (misal dari Postman):
 ```
 POST https://silence-furniture-gale-sculpture.trycloudflare.com/shipping/biteship/webhook
-Header: Tabita-Modiste-Signature: tabita-rahasia-2026
+Header: Tabita-Modiste-Signature: <token dari .env>
 Body (JSON): {"event":"order.status","status":"inTransit"}
 ```
 Harus balas:

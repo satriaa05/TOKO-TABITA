@@ -286,6 +286,27 @@ Tersimpan di `docs/screenshots/`:
 - `OnlineOrderService` menambah retry transaksi saat database terkunci. Uji konkurensi HTTP
   sungguhan dengan 5 server & 5 akun menghasilkan 1 invoice, stok 0, 0 oversell, tanpa 500.
 
+### M. Keamanan webhook & state machine pembayaran (19 Nov 2026)
+- Token webhook Biteship dirotasi dan dihapus dari script/dokumentasi; script kini membaca
+  `BITESHIP_WEBHOOK_TOKEN` dari `.env`. User wajib update secret di dashboard Biteship.
+- `trustProxies(at: '*')` diganti daftar `TRUSTED_PROXIES` (default kosong) agar IP tidak bisa
+  dipalsukan untuk bypass throttle login.
+- Template produksi menambah `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`;
+  `SEED_DEMO` diset false di Render/Docker; health check memakai `/up`.
+- `PaymentService` sekarang memakai transisi terminal: `markFailed/markExpired` menolak
+  mengubah transaksi `Paid/Failed/Expired`. `markPaid` setelah `Failed/Expired` memotong
+  stok ulang via `StockReleaseService::reReserve()` dan mengosongkan `stock_released_at`.
+- Webhook yang melempar exception tidak lagi hilang di `laravel.log`: Midtrans & Biteship
+  mencatat baris `PaymentWebhookLog` berstatus `failed` sebelum membalas 200.
+- `MidtransService::charge()` memakai cache lock per transaksi; ada `refresh()` untuk QR
+  kedaluwarsa dengan reference baru `-R{n}` dan tombol di halaman pembayaran.
+- Command `payments:sync-pending` dijadwalkan tiap 10 menit; `media:prune` harian.
+- `EnsurePermission` berubah dari fail-open menjadi **default deny**.
+- Route `admin.audit-logs.index` didaftarkan dengan `permission:reports.view` (Owner bypass),
+  tersedia di navigasi Admin & Owner.
+- Test baru: `PaymentStateMachineTest` (6) + `PermissionDefaultDenyTest` (4).
+  Total **177 test / 851 assertions**.
+
 ---
 
 ## Kesimpulan

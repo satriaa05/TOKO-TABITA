@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,12 @@ use Tests\TestCase;
 class MediaTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(PermissionSeeder::class);
+    }
 
     /**
      * Isi berkas fixture gambar.

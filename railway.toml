@@ -5,7 +5,7 @@ dockerContext = "."
 
 [deploy]
 startCommand = "/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
-healthcheckPath = "/"
+healthcheckPath = "/up"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10

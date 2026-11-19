@@ -2,8 +2,8 @@
 
 > Tanggal: 18 November 2026  
 > Perintah (dengan GD): `& 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test` di **PowerShell** — PHP **8.5.12 + GD aktif**.  
-> Hasil terakhir (19 November 2026): **167 test · 167 passed · 0 skipped · 815 assertions**  
-> (mencakup test multi-user, stok, pembayaran, galeri varian, dan operasi keranjang)
+> Hasil terakhir (19 November 2026): **177 test · 177 passed · 0 skipped · 851 assertions**  
+> (mencakup state machine pembayaran, default-deny permission, dan audit log)
 
 ---
 
@@ -11,7 +11,7 @@
 
 | Status | Jumlah | Keterangan |
 |---|---|---|
-| **PASS** | 167 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
+| **PASS** | 177 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
 | **FAIL** | 0 | Tidak ada test yang gagal |
 | **SKIPPED** | 0 | Tidak ada test yang diskip setelah GD diaktifkan |
 | **BLOCKED** | 6 skenario live | Butuh kredensial Midtrans/Biteship/Resend; peta gratis sudah aktif |
@@ -109,7 +109,7 @@ php artisan view:clear
 Ringkasan akhir akan muncul seperti:
 
 ```
-Tests: 167 passed (815 assertions)
+Tests: 177 passed (851 assertions)
 ```
 
 ---
@@ -181,4 +181,28 @@ stok tidak cukup. Tidak ada HTTP 500, invoice tidak duplikat, stok tidak minus. 
 `scripts/concurrency-checkout.php` + `scripts/concurrency-checkout.ps1`.
 
 > QRIS live tetap **BLOCKED** sampai kredensial Midtrans diisi.
+
+---
+
+## 10. Keamanan & state machine pembayaran (19 November 2026) — PASS
+
+| Perubahan | Status | Bukti |
+|---|---|---|
+| Token webhook Biteship dirotasi & tidak lagi literal di script/docs | **PASS** | `.env`, `scripts/tunnel-lokal.ps1`, `docs/PANDUAN-TUNNEL-LOKAL.md` |
+| Trusted proxy default deny (tidak mempercayai `X-Forwarded-*` sembarangan) | **PASS** | `bootstrap/app.php`, env `TRUSTED_PROXIES` |
+| Cookie session produksi `Secure` + terenkripsi | **PASS** | `docs/env.production.example` |
+| `SEED_DEMO=false` di Render & Docker | **PASS** | `render.yaml`, `docker/entrypoint.sh` |
+| Webhook Midtrans gagal tercatat di `PaymentWebhookLog` | **PASS** | `MidtransWebhookController`, `test_webhook_yang_melempar_exception_dicatat_di_log_admin` |
+| Webhook Biteship gagal/invalid juga tercatat | **PASS** | `BiteshipWebhookController` |
+| `expire/deny` tidak menimpa transaksi LUNAS | **PASS** | `PaymentStateMachineTest` |
+| `settlement` setelah `expired` memotong stok ulang sekali | **PASS** | `test_settlement_setelah_expired_memotong_stok_ulang` |
+| Charge Midtrans anti-double (cache lock) | **PASS** | `MidtransService::charge()` |
+| QR kedaluwarsa bisa dibuat ulang via tombol | **PASS** | `PaymentStateMachineTest` (2 test) |
+| Scheduler `payments:sync-pending` tiap 10 menit | **PASS** | `routes/console.php`, `app/Console/Commands/SyncPendingPayments.php` |
+| Permission default-deny saat `role_permissions` kosong | **PASS** | `PermissionDefaultDenyTest` (4 test) |
+| Halaman Jejak Audit bisa dibuka Admin & Owner | **PASS** | `PermissionDefaultDenyTest`, `RouteHealthMatrixTest` |
+
+> **Tindakan user:** token webhook Biteship sudah berubah. Buka `.env`, ambil nilai
+> `BITESHIP_WEBHOOK_TOKEN`, lalu update header secret di dashboard Biteship.
+> Jangan menempelkan token tersebut ke chat atau commit.
 

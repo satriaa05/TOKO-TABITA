@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Exceptions\PaymentGatewayException;
+use App\Enums\PaymentStatus;
 use App\Models\PaymentChannel;
 use App\Models\PaymentTransaction;
 use App\Models\Sale;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -31,6 +33,59 @@ class MidtransService
     {
         $this->assertConfigured();
 
+        // Kunci per transaksi supaya dua tab yang membuka halaman pembayaran
+        // bersamaan tidak melakukan charge dua kali dengan order_id sama.
+        return Cache::lock('midtrans-charge-'.$transaction->id, 60)->block(10, function () use ($transaction) {
+            /** @var PaymentTransaction $fresh */
+            $fresh = $transaction->fresh() ?? $transaction;
+
+            if ($fresh->provider_reference) {
+                return [
+                    'provider_reference' => (string) $fresh->provider_reference,
+                    'qr_code_url' => $fresh->qr_code_url ? (string) $fresh->qr_code_url : null,
+                    'expired_at' => $fresh->expired_at,
+                ];
+            }
+
+            return $this->performCharge($fresh);
+        });
+    }
+
+    /**
+     * Buat QR/reference baru bila QR lama kedaluwarsa.
+     * ORDER_ID lama tidak dipakai ulang; suffix -R{n} menjaga keunikan.
+     */
+    public function refresh(PaymentTransaction $transaction): array
+    {
+        $this->assertConfigured();
+
+        return Cache::lock('midtrans-charge-'.$transaction->id, 60)->block(10, function () use ($transaction) {
+            /** @var PaymentTransaction $fresh */
+            $fresh = $transaction->fresh() ?? $transaction;
+
+            if ($fresh->status === PaymentStatus::Paid) {
+                throw new PaymentGatewayException('Pesanan ini sudah lunas.');
+            }
+
+            $base = preg_replace('/-R\d+$/', '', (string) $fresh->transaction_reference);
+            $attempt = ((int) ($fresh->metadata['refresh_attempt'] ?? 0)) + 1;
+
+            $fresh->update([
+                'transaction_reference' => $base.'-R'.$attempt,
+                'provider_reference' => null,
+                'qr_code_url' => null,
+                'payment_url' => null,
+                'expired_at' => null,
+                'metadata' => array_merge((array) $fresh->metadata, ['refresh_attempt' => $attempt]),
+            ]);
+
+            return $this->performCharge($fresh->refresh());
+        });
+    }
+
+    /** @return array{provider_reference: string, qr_code_url: ?string, expired_at: ?Carbon} */
+    private function performCharge(PaymentTransaction $transaction): array
+    {
         $sale = $transaction->sale()->with('items', 'user')->firstOrFail();
         $channel = $transaction->channel;
 

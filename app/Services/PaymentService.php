@@ -158,6 +158,9 @@ class PaymentService
                 return false;
             }
 
+            $previousStatus = $locked->status;
+            $latePayment = in_array($previousStatus, [PaymentStatus::Failed, PaymentStatus::Expired], true);
+
             /** @var Sale $sale */
             $sale = Sale::query()->lockForUpdate()->findOrFail($locked->sale_id);
             $oldStatus = $sale->payment_status;
@@ -183,6 +186,23 @@ class PaymentService
             $sale->completed_at = now();
             $sale->save();
 
+            $reReserved = false;
+            $reReserveError = null;
+
+            if ($latePayment && $sale->stock_released_at !== null) {
+                try {
+                    $reReserved = $this->releases->reReserve(
+                        $sale,
+                        'Stok dipotong ulang: pembayaran '.$sale->invoice_number.' diterima setelah status '.$previousStatus->value.'.'
+                    );
+                } catch (\Throwable $e) {
+                    // Uang sudah diterima: jangan gagalkan status LUNAS hanya karena
+                    // stok tidak cukup. Catat untuk ditindaklanjuti Admin.
+                    $reReserveError = $e->getMessage();
+                    Log::error('Gagal memotong ulang stok '.$sale->invoice_number.': '.$reReserveError);
+                }
+            }
+
             // Catatan pembayaran untuk laporan POS yang sudah ada.
             Payment::create([
                 'sale_id' => $sale->id,
@@ -197,13 +217,16 @@ class PaymentService
                 'old_payment_status' => $oldStatus?->value,
                 'new_payment_status' => PaymentStatus::Paid->value,
                 'source' => $source,
-                'note' => 'Pembayaran terverifikasi ('.$source.').',
+                'note' => 'Pembayaran terverifikasi ('.$source.').'
+                    .($reReserved ? ' Stok dipotong ulang setelah pembayaran terlambat.' : '')
+                    .($reReserveError !== null ? ' PERHATIAN: stok gagal dipotong ulang.' : ''),
             ]);
 
             $this->notify(
                 $sale,
                 NotificationType::PaymentSuccess,
                 'Pembayaran '.$sale->invoice_number.' berhasil dikonfirmasi. Pesanan Anda akan segera diproses.'
+                    .($reReserveError !== null ? ' Catatan: stok sedang diverifikasi tim kami.' : '')
             );
 
             AuditLog::create([
@@ -226,7 +249,7 @@ class PaymentService
         return DB::transaction(function () use ($transaction, $detail, $source) {
             $locked = PaymentTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
 
-            if ($locked->status === PaymentStatus::Failed) {
+            if (in_array($locked->status, [PaymentStatus::Paid, PaymentStatus::Failed, PaymentStatus::Expired], true)) {
                 return false;
             }
 
@@ -270,7 +293,7 @@ class PaymentService
         return DB::transaction(function () use ($transaction, $source) {
             $locked = PaymentTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
 
-            if ($locked->status === PaymentStatus::Expired) {
+            if (in_array($locked->status, [PaymentStatus::Paid, PaymentStatus::Failed, PaymentStatus::Expired], true)) {
                 return false;
             }
 
@@ -306,6 +329,22 @@ class PaymentService
 
             return true;
         });
+    }
+
+    /**
+     * Catat kegagalan webhook yang belum sempat ditulis process().
+     * Dipanggil controller supaya error tidak hilang hanya di laravel.log.
+     */
+    public function logFailure(array $payload, \Throwable $e): void
+    {
+        $this->log(
+            $payload,
+            (string) ($payload['order_id'] ?? ''),
+            'failed',
+            false,
+            $e->getMessage(),
+            'webhook-error:'.Str::random(16)
+        );
     }
 
     /** @param  array<string, mixed>  $payload */

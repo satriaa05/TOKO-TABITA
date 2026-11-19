@@ -49,7 +49,7 @@ function Show-Info {
     Write-Host "Di Biteship: Integrasi -> Webhook -> Add Webhook"
     Write-Host "Events : order.status, order.waybill_id, order.price"
     Write-Host "Header : Tabita-Modiste-Signature"
-    Write-Host "Secret : dari .env (BITESHIP_WEBHOOK_TOKEN) — jangan dibagikan"
+    Write-Host "Secret : dari .env (BITESHIP_WEBHOOK_TOKEN) - jangan dibagikan"
     Write-Host ""
     Write-Host "CATATAN: URL berubah kalau tunnel dibuat ulang."
     Write-Host "Jangan tutup jendela proses sampai selesai uji coba."

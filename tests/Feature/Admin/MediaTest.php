@@ -368,7 +368,7 @@ class MediaTest extends TestCase
         $this->assertSame(1, Media::siteRole('collection')->count());
     }
 
-    public function test_owner_tidak_bisa_menghapus_foto_produk(): void
+    public function test_owner_dapat_menghapus_foto_produk(): void
     {
         Storage::fake('public');
         $product = Product::factory()->create();
@@ -382,9 +382,9 @@ class MediaTest extends TestCase
 
         $this->actingAs($this->owner())
             ->delete(route('admin.media.destroy', $media))
-            ->assertForbidden();
+            ->assertRedirect();
 
-        $this->assertDatabaseCount('media', 1);
+        $this->assertDatabaseCount('media', 0);
     }
 
     // -----------------------------------------------------------------

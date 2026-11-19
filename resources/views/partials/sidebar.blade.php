@@ -4,6 +4,9 @@
 
     // Struktur menu diambil dari config/navigation.php sesuai peran pengguna.
     $menu = config('navigation.'.$user->role->value, []);
+
+    // Nama toko mengikuti pengaturan Owner (fallback ke config).
+    $storeName = store_profile()->name();
 @endphp
 
 <aside class="pos-sidebar">
@@ -14,12 +17,12 @@
     <div class="sidebar-brand">
         @if ($siteLogo)
             <img src="{{ $siteLogo->url() }}"
-                 alt="Logo {{ config('pos.store.name') }}"
+                 alt="Logo {{ $storeName }}"
                  style="height: 24px; width: auto; max-width: 150px; object-fit: contain;">
         @else
             <i class="bi bi-shop"></i>
         @endif
-        <span>{{ config('pos.store.name') }}</span>
+        <span>{{ $storeName }}</span>
     </div>
 
     <nav class="py-2 flex-grow-1 overflow-y-auto">

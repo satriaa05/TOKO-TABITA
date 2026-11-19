@@ -40,8 +40,9 @@ class MediaService
      * @param  int|null  $targetId  id pemilik (NULL untuk aset site)
      * @param  string  $role  fungsi gambar ("gallery", "photo", "logo", dst.)
      * @param  string|null  $color  label variasi warna (opsional)
+     * @param  int|null  $colorId  entitas warna produk (opsional, data lama boleh null)
      */
-    public function store(UploadedFile $file, string $type, ?int $targetId, string $role, ?string $color = null): Media
+    public function store(UploadedFile $file, string $type, ?int $targetId, string $role, ?string $color = null, ?int $colorId = null): Media
     {
         $directory = $this->directory($type, $targetId, $role);
         $extension = $this->extensionFor($file);
@@ -66,6 +67,9 @@ class MediaService
             'mediable_id' => $targetId,
             'role' => $role,
             'color' => $this->cleanColor($color),
+            'color_id' => $colorId,
+            'is_color_primary' => $colorId !== null
+                && ! Media::query()->where('color_id', $colorId)->where('is_color_primary', true)->exists(),
             'disk' => $this->disk,
             'path' => $path,
             'original_name' => $file->getClientOriginalName(),
@@ -154,6 +158,36 @@ class MediaService
             ->update(['is_primary' => false]);
 
         $media->update(['is_primary' => true]);
+    }
+
+    /**
+     * Jadikan satu foto sebagai thumbnail warnanya (berbeda dengan foto utama
+     * global yang dipakai katalog). Aman untuk data lama yang belum punya
+     * color_id: fallback ke label warna string.
+     */
+    public function setColorPrimary(Media $media): void
+    {
+        $query = Media::query()
+            ->where('mediable_type', $media->mediable_type)
+            ->where('mediable_id', $media->mediable_id)
+            ->where('role', $media->role)
+            ->where('id', '!=', $media->id);
+
+        if ($media->color_id !== null) {
+            $query->where('color_id', $media->color_id);
+        } else {
+            $query->where('color', $media->color);
+        }
+
+        $query->update(['is_color_primary' => false]);
+
+        $media->update(['is_color_primary' => true]);
+
+        if ($media->color_id !== null) {
+            \App\Models\ProductColor::query()
+                ->where('id', $media->color_id)
+                ->update(['thumbnail_media_id' => $media->id]);
+        }
     }
 
     /**

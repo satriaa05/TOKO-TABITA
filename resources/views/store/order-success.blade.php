@@ -25,7 +25,7 @@
         </ul>
 
         @if ($waLink)
-            <a href="{{ $waLink }}" target="_blank" rel="noopener" class="btn btn-primary btn-lg">
+            <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
                 <i class="bi bi-whatsapp" aria-hidden="true"></i>
                 Konfirmasi &amp; Kirim Bukti via WhatsApp
             </a>
@@ -34,7 +34,7 @@
             </p>
         @else
             <div class="alert alert-warning d-inline-block">
-                Nomor WhatsApp toko belum dikonfigurasi. Admin akan menghubungi Anda.
+                Nomor WhatsApp toko belum dikonfigurasi Owner. Admin akan menghubungi Anda.
             </div>
         @endif
 

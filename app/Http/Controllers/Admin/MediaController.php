@@ -92,13 +92,25 @@ class MediaController extends Controller
                 'max:'.config('media.max_size_kb'),
             ],
             'color' => ['nullable', 'string', 'max:50'],
+            'color_id' => ['nullable', 'integer', 'exists:product_colors,id'],
         ], $this->validationMessages());
 
         $color = trim((string) $request->input('color')) ?: null;
+        $colorId = $request->integer('color_id') ?: null;
+
+        if ($colorId !== null) {
+            $colorOption = \App\Models\ProductColor::query()
+                ->where('id', $colorId)
+                ->where('product_id', $product->id)
+                ->firstOrFail();
+
+            $color = $colorOption->name;
+        }
+
         $stored = [];
 
         foreach ($request->file('photos') as $file) {
-            $stored[] = $this->mediaService->store($file, 'product', $product->id, 'gallery', $color);
+            $stored[] = $this->mediaService->store($file, 'product', $product->id, 'gallery', $color, $colorId);
         }
 
         // Produk baru tanpa foto: foto pertama otomatis menjadi foto utama.
@@ -173,10 +185,23 @@ class MediaController extends Controller
 
         $validated = $request->validate([
             'color' => ['nullable', 'string', 'max:50'],
+            'color_id' => ['nullable', 'integer', 'exists:product_colors,id'],
         ], $this->validationMessages());
 
         $old = $media->color;
-        $media->update(['color' => trim((string) $validated['color']) ?: null]);
+        $colorId = $request->integer('color_id') ?: null;
+
+        if ($colorId !== null && $media->mediable_type === 'product') {
+            \App\Models\ProductColor::query()
+                ->where('id', $colorId)
+                ->where('product_id', $media->mediable_id)
+                ->firstOrFail();
+        }
+
+        $media->update([
+            'color' => trim((string) $validated['color']) ?: null,
+            'color_id' => $colorId,
+        ]);
 
         $this->log(
             $request,
@@ -201,6 +226,18 @@ class MediaController extends Controller
         $this->mediaService->setPrimary($media);
 
         return back()->with('success', 'Foto utama berhasil ditetapkan.');
+    }
+
+    /**
+     * Tetapkan thumbnail untuk warna foto ini (berbeda dari foto utama global).
+     */
+    public function setColorPrimary(Request $request, Media $media): RedirectResponse
+    {
+        $this->authorizeManage($media);
+
+        $this->mediaService->setColorPrimary($media);
+
+        return back()->with('success', 'Foto utama warna berhasil ditetapkan.');
     }
 
     /**
@@ -250,8 +287,8 @@ class MediaController extends Controller
     }
 
     /**
-     * Izin kelola gambar: Admin boleh semua; Owner hanya aset site.
-     * (route juga sudah dipagari middleware).
+     * Izin kelola gambar: Admin & Owner boleh mengelola seluruh gambar.
+     * Hak akses tetap dibatasi middleware permission di rute.
      */
     private function authorizeManage(Media $media): void
     {
@@ -261,11 +298,7 @@ class MediaController extends Controller
             abort(403);
         }
 
-        if ($user->isAdmin()) {
-            return;
-        }
-
-        if ($user->role->value === 'owner' && $media->isSiteAsset()) {
+        if ($user->isAdmin() || $user->isOwner()) {
             return;
         }
 

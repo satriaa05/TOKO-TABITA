@@ -11,19 +11,29 @@ class ProductVariant extends Model
         'product_id',
         'size',
         'color',
+        'color_id',
         'stock',
+        'is_active',
+        'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
             'stock' => 'integer',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function colorOption(): BelongsTo
+    {
+        return $this->belongsTo(ProductColor::class, 'color_id');
     }
 
     public function label(): string

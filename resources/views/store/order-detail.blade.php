@@ -10,6 +10,11 @@
                 <h1 class="store-section-title" style="font-size: 1.35rem;">{{ $sale->invoice_number }}</h1>
             </div>
             <span class="badge {{ $sale->status->badgeClass() }} fs-6">{{ $sale->status->label() }}</span>
+            @if ($sale->payment_status?->value === 'paid')
+                <a href="{{ route('store.orders.tracking', $sale) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-geo-alt" aria-hidden="true"></i> Lacak Pengiriman
+                </a>
+            @endif
         </div>
 
         @if (session('success'))
@@ -35,13 +40,21 @@
                                     @foreach ($sale->items as $item)
                                         <tr>
                                             <td>
-                                                {{ $item->product_name }}
-                                                @if ($item->size || $item->color)
-                                                    <span class="d-block small text-muted-2">
-                                                        @if ($item->color)Warna {{ $item->color }}@endif
-                                                        @if ($item->size)Ukuran {{ $item->size }}@endif
+                                                <div class="d-flex align-items-center gap-2">
+                                                    @if ($item->photoUrl())
+                                                        <img src="{{ $item->photoUrl() }}" alt=""
+                                                             style="width:44px;height:44px;object-fit:cover;border-radius:.35rem;">
+                                                    @endif
+                                                    <span>
+                                                        {{ $item->product_name }}
+                                                        @if ($item->size || $item->color)
+                                                            <span class="d-block small text-muted-2">
+                                                                @if ($item->color)Warna {{ $item->color }}@endif
+                                                                @if ($item->size)Ukuran {{ $item->size }}@endif
+                                                            </span>
+                                                        @endif
                                                     </span>
-                                                @endif
+                                                </div>
                                             </td>
                                             <td class="text-center font-money">{{ rupiah($item->price) }}</td>
                                             <td class="text-center">{{ $item->qty }}</td>
@@ -52,11 +65,16 @@
                             </table>
                         </div>
                         <div class="card-footer">
-                            <div class="d-flex justify-content-between"><span class="text-muted-2">Subtotal</span><span class="font-money">{{ rupiah($sale->subtotal) }}</span></div>
+                            <div class="d-flex justify-content-between"><span class="text-muted-2">Subtotal produk</span><span class="font-money">{{ rupiah($sale->subtotal) }}</span></div>
                             @if ($sale->discount_total > 0)
                                 <div class="d-flex justify-content-between"><span class="text-muted-2">Diskon</span><span class="font-money text-success">-{{ rupiah($sale->discount_total) }}</span></div>
                             @endif
-                            <div class="d-flex justify-content-between"><span class="fw-bold">Total</span><span class="font-money fw-bold">{{ rupiah($sale->total) }}</span></div>
+                            <div class="d-flex justify-content-between"><span class="text-muted-2">Ongkos kirim</span><span class="font-money">{{ rupiah($sale->shipping_cost) }}</span></div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between"><span class="fw-bold">Total pembayaran</span><span class="font-money fw-bold">{{ rupiah($sale->total) }}</span></div>
+                            <p class="small text-muted-2 mt-2 mb-0">
+                                Total = Subtotal − Diskon + Ongkir. Ongkir hanya dihitung sekali dan sudah termasuk dalam total pesanan.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -66,9 +84,15 @@
                 <div class="card h-100">
                     <div class="card-header">Pembayaran &amp; Bukti</div>
                     <div class="card-body">
+                        @php $buyerTransaction = $sale->paymentTransactions->first(); @endphp
                         <p class="small text-muted-2">
-                            Pembayaran dilakukan via <strong>transfer bank</strong>.
-                            Unggah bukti agar admin dapat memverifikasi.
+                            Metode pembayaran: <strong>{{ $buyerTransaction?->channel?->name ?: 'Transfer Bank' }}</strong>.
+                            @if ($buyerTransaction?->provider_reference)
+                                <br>Referensi: {{ $buyerTransaction->provider_reference }}
+                            @endif
+                            @if ($sale->status->value === 'pending_payment')
+                                Unggah bukti agar Admin dapat memverifikasi.
+                            @endif
                         </p>
 
                         @if ($sale->paymentProofs->isNotEmpty())

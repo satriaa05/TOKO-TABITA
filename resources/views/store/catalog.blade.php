@@ -95,8 +95,8 @@
                             @endauth
 
                             <a href="{{ route('store.product', $product) }}" class="d-block text-decoration-none" aria-label="Lihat detail {{ $product->name }}">
-                                @if ($product->primaryPhoto)
-                                    <img src="{{ $product->primaryPhoto->url() }}" alt="Foto produk {{ $product->name }}"
+                                @if ($product->displayPhoto())
+                                    <img src="{{ $product->displayPhoto()->url() }}" alt="Foto produk {{ $product->name }}"
                                          class="st-product-img" loading="lazy" style="object-fit: cover;">
                                 @else
                                     <img src="{{ asset('assets/images/products/dresses/linen-blazer-dress.jpg') }}" alt="Foto model {{ $product->name }}"

@@ -15,8 +15,8 @@
     --pos-primary: #bd777c;
     --pos-primary-dark: #a65e63;
     --pos-sidebar-width: 250px;
-    --pos-sidebar-bg: #33261f;
-    --pos-sidebar-bg-hover: #42332b;
+    --pos-sidebar-bg: #835943;
+    --pos-sidebar-bg-hover: #835943;
     --pos-sidebar-text: #f3e8de;
     --pos-sidebar-text-active: #ffffff;
     --pos-surface: #fff9f7;
@@ -56,6 +56,32 @@ h1, h2, h3, h4, h5, h6,
 
 .text-muted-2 {
     color: var(--tabita-muted) !important;
+}
+
+/* -------------------------------------------------------------------
+   2a. TANPA GARIS BAWAH PADA TEKS
+   Hanya status "harga coret" yang sengaja memakai line-through.
+   ------------------------------------------------------------------- */
+a,
+a:hover,
+a:focus,
+a:active,
+.btn,
+.btn:hover,
+.btn:focus,
+button,
+.nav-link,
+.st-btn,
+.st-btn:hover,
+.st-btn-soft,
+.st-btn-outline,
+.sidebar a,
+.dropdown-item {
+    text-decoration: none !important;
+}
+
+.st-price-old {
+    text-decoration: line-through !important;
 }
 
 .font-money {

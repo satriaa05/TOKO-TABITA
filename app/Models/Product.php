@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -86,6 +88,89 @@ class Product extends Model
             ->orderByDesc('is_primary')
             ->orderBy('sort_order')
             ->orderBy('id');
+    }
+
+    /**
+     * Daftar warna produk, aktif lebih dulu.
+     */
+    public function colors(): HasMany
+    {
+        return $this->hasMany(ProductColor::class)
+            ->orderByDesc('is_active')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    public function activeColors(): Collection
+    {
+        return $this->relationLoaded('colors')
+            ? $this->colors->where('is_active', true)->values()
+            : $this->colors()->active()->get();
+    }
+
+    /**
+     * Foto galeri untuk satu warna.
+     *
+     * Fallback berurutan: color_id -> label string lama -> foto utama produk.
+     * Dengan begitu produk lama yang belum punya entitas warna tetap tampil.
+     */
+    public function photosForColor(?string $color, ?int $colorId = null): Collection
+    {
+        $photos = $this->relationLoaded('photos') ? $this->photos : $this->photos()->get();
+
+        if ($colorId !== null) {
+            $matched = $photos->where('color_id', $colorId)->values();
+        } elseif ($color !== null && $color !== '') {
+            $colorModel = $this->relationLoaded('colors')
+                ? $this->colors->first(fn ($item) => $item->name === $color)
+                : $this->colors()->where('name', $color)->first();
+
+            $matched = $colorModel
+                ? $photos->where('color_id', $colorModel->id)->values()
+                : collect();
+
+            if ($matched->isEmpty()) {
+                $matched = $photos->where('color', $color)->values();
+            }
+        } else {
+            $matched = $photos->values();
+        }
+
+        if ($matched->isEmpty() && $photos->isNotEmpty()) {
+            $matched = collect([$photos->first()]);
+        }
+
+        return $matched->sortBy('sort_order')->values();
+    }
+
+    public function primaryPhotoForColor(?string $color, ?int $colorId = null): ?Media
+    {
+        return $this->photosForColor($color, $colorId)->first();
+    }
+
+    /**
+     * Foto yang dipakai kartu produk di katalog/beranda/cart.
+     * Bila warna diketahui, foto warna itu yang dipakai.
+     */
+    public function displayPhoto(?string $color = null): ?Media
+    {
+        if ($color) {
+            return $this->primaryPhotoForColor($color);
+        }
+
+        $firstColor = $this->activeColors()->first();
+
+        if ($firstColor?->thumbnail_media_id) {
+            $thumbnail = Media::query()->find($firstColor->thumbnail_media_id);
+
+            if ($thumbnail !== null) {
+                return $thumbnail;
+            }
+        }
+
+        return $this->relationLoaded('primaryPhoto')
+            ? $this->primaryPhoto
+            : $this->primaryPhoto()->first();
     }
 
     // -----------------------------------------------------------------

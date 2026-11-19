@@ -29,12 +29,15 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($items as $item)
-                                        @php($product = $item['product'])
+                                        @php
+                                            $product = $item['product'];
+                                            $cartPhoto = $product->displayPhoto($item['color'] ?? null);
+                                        @endphp
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    @if ($product->primaryPhoto)
-                                                        <img src="{{ $product->primaryPhoto->url() }}"
+                                                    @if ($cartPhoto)
+                                                        <img src="{{ $cartPhoto->url() }}"
                                                              alt="Foto produk {{ $product->name }}"
                                                              style="width: 56px; height: 56px; object-fit: cover; border-radius: .4rem;">
                                                     @else

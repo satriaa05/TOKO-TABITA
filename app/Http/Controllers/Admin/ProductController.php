@@ -7,12 +7,15 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductColor;
 use App\Models\ProductVariant;
+use App\Models\SaleItem;
 use App\Models\StockMovement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -23,6 +26,9 @@ use Illuminate\View\View;
  */
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+    }
     /**
      * Daftar produk dengan pencarian, filter, sorting, dan pagination.
      */
@@ -142,7 +148,7 @@ class ProductController extends Controller
      */
     public function edit(Product $product): View
     {
-        $product->load('photos');
+        $product->load('photos', 'colors', 'variants');
 
         return view('admin.products.form', [
             'product' => $product,
@@ -191,11 +197,23 @@ class ProductController extends Controller
         $data = $request->validate([
             'size' => ['nullable', 'string', 'max:20'],
             'color' => ['nullable', 'string', 'max:50'],
+            'color_id' => ['nullable', 'integer', 'exists:product_colors,id'],
             'stock' => ['required', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ]);
 
-        $size = $data['size'] !== null ? trim((string) $data['size']) : null;
-        $color = $data['color'] !== null ? trim((string) $data['color']) : null;
+        $size = ($data['size'] ?? null) !== null ? trim((string) $data['size']) : null;
+        $color = ($data['color'] ?? null) !== null ? trim((string) $data['color']) : null;
+        $colorId = $request->integer('color_id') ?: null;
+
+        if ($colorId !== null) {
+            $colorOption = ProductColor::query()
+                ->where('id', $colorId)
+                ->where('product_id', $product->id)
+                ->firstOrFail();
+
+            $color = $colorOption->name;
+        }
 
         if (! $size && ! $color) {
             return back()->with('error', 'Isi minimal ukuran atau warna untuk varian.');
@@ -215,7 +233,10 @@ class ProductController extends Controller
             'product_id' => $product->id,
             'size' => $size,
             'color' => $color,
+            'color_id' => $colorId,
             'stock' => (int) $data['stock'],
+            'is_active' => true,
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
         ]);
 
         $this->syncProductStock($product);
@@ -254,6 +275,177 @@ class ProductController extends Controller
     }
 
     /**
+     * Tambah warna produk (entitas galeri + swatch).
+     */
+    public function storeColor(Request $request, Product $product): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:50'],
+            'hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+        ]);
+
+        $name = trim($data['name']);
+
+        if (ProductColor::query()->where('product_id', $product->id)->where('name', $name)->exists()) {
+            return back()->with('error', 'Warna "'.$name.'" sudah ada di produk ini.');
+        }
+
+        ProductColor::create([
+            'product_id' => $product->id,
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'hex' => $data['hex'] ?? null,
+            'is_active' => true,
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
+        ]);
+
+        $this->audit($request, $product, 'product.color.create', 'Warna "'.$name.'" ditambahkan.');
+
+        return back()->with('success', 'Warna berhasil ditambahkan.');
+    }
+
+    public function updateColor(Request $request, ProductColor $color): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:50'],
+            'hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+        ]);
+
+        $name = trim($data['name']);
+        $duplicate = ProductColor::query()
+            ->where('product_id', $color->product_id)
+            ->where('name', $name)
+            ->where('id', '!=', $color->id)
+            ->exists();
+
+        if ($duplicate) {
+            return back()->with('error', 'Warna "'.$name.'" sudah ada di produk ini.');
+        }
+
+        $old = $color->name;
+        $color->update([
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'hex' => $data['hex'] ?? null,
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
+        ]);
+
+        // Jaga konsistensi label string pada varian & media lama.
+        ProductVariant::query()->where('color_id', $color->id)->update(['color' => $name]);
+        \App\Models\Media::query()->where('color_id', $color->id)->update(['color' => $name]);
+
+        $this->audit($request, $color->product, 'product.color.update', 'Warna "'.$old.'" diubah menjadi "'.$name.'".');
+
+        return back()->with('success', 'Warna berhasil diperbarui.');
+    }
+
+    public function toggleColor(Request $request, ProductColor $color): RedirectResponse
+    {
+        $color->update(['is_active' => ! $color->is_active]);
+
+        $this->audit($request, $color->product, 'product.color.toggle', 'Status warna "'.$color->name.'" diubah.');
+
+        return back()->with('success', 'Status warna berhasil diubah.');
+    }
+
+    /**
+     * Hapus warna hanya bila belum dipakai varian, foto, maupun transaksi.
+     * Warna yang sudah tercatat di riwayat cukup dinonaktifkan.
+     */
+    public function destroyColor(Request $request, ProductColor $color): RedirectResponse
+    {
+        $usedInSale = SaleItem::query()
+            ->where('product_id', $color->product_id)
+            ->where('color', $color->name)
+            ->exists();
+
+        if ($color->variants()->exists() || $color->media()->exists() || $usedInSale) {
+            return back()->with('error', 'Warna ini sudah dipakai varian/foto/transaksi. Nonaktifkan saja agar riwayat tetap utuh.');
+        }
+
+        $name = $color->name;
+        $color->delete();
+
+        $this->audit($request, $color->product, 'product.color.delete', 'Warna "'.$name.'" dihapus.');
+
+        return back()->with('success', 'Warna berhasil dihapus.');
+    }
+
+    /**
+     * Edit stok/varian tanpa harus menghapus & membuat ulang.
+     */
+    public function updateVariant(Request $request, ProductVariant $variant): RedirectResponse
+    {
+        $data = $request->validate([
+            'size' => ['nullable', 'string', 'max:20'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'color_id' => ['nullable', 'integer', 'exists:product_colors,id'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+        ]);
+
+        $size = ($data['size'] ?? null) !== null ? trim((string) $data['size']) : null;
+        $color = ($data['color'] ?? null) !== null ? trim((string) $data['color']) : null;
+        $colorId = $request->integer('color_id') ?: null;
+
+        if ($colorId !== null) {
+            $colorOption = ProductColor::query()
+                ->where('id', $colorId)
+                ->where('product_id', $variant->product_id)
+                ->firstOrFail();
+
+            $color = $colorOption->name;
+        }
+
+        $duplicate = ProductVariant::query()
+            ->where('product_id', $variant->product_id)
+            ->where('size', $size)
+            ->where('color', $color)
+            ->where('id', '!=', $variant->id)
+            ->exists();
+
+        if ($duplicate) {
+            return back()->with('error', 'Kombinasi warna & ukuran ini sudah ada.');
+        }
+
+        $variant->update([
+            'size' => $size,
+            'color' => $color,
+            'color_id' => $colorId,
+            'stock' => (int) $data['stock'],
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
+        ]);
+
+        $this->syncProductStock($variant->product);
+        $this->audit($request, $variant->product, 'product.variant.update', 'Varian '.$variant->label().' diperbarui.');
+
+        return back()->with('success', 'Varian berhasil diperbarui.');
+    }
+
+    public function toggleVariant(Request $request, ProductVariant $variant): RedirectResponse
+    {
+        $variant->update(['is_active' => ! $variant->is_active]);
+
+        $this->syncProductStock($variant->product);
+        $this->audit($request, $variant->product, 'product.variant.toggle', 'Status varian '.$variant->label().' diubah.');
+
+        return back()->with('success', 'Status varian berhasil diubah.');
+    }
+
+    private function audit(Request $request, Product $product, string $action, string $description): void
+    {
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => $action,
+            'model_type' => Product::class,
+            'model_id' => $product->id,
+            'description' => $description.' Produk "'.$product->name.'".',
+        ]);
+    }
+
+    /**
      * Sinkronkan products.stock dengan akumulasi varian.
      * Produk non-varian dibiarkan apa adanya.
      */
@@ -262,7 +454,9 @@ class ProductController extends Controller
         $variantCount = $product->variants()->count();
 
         if ($variantCount > 0) {
-            $product->update(['stock' => (int) $product->variants()->sum('stock')]);
+            $product->update([
+                'stock' => (int) $product->variants()->where('is_active', true)->sum('stock'),
+            ]);
         }
     }
 

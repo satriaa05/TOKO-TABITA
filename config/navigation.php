@@ -20,12 +20,26 @@ return [
             'icon' => 'bi-speedometer2',
             'route' => 'admin.dashboard',
         ],
+        [
+            'type' => 'item',
+            'label' => 'Profil Saya',
+            'icon' => 'bi-person-circle',
+            'route' => 'profile.index',
+        ],
 
         ['type' => 'section', 'label' => 'Master Data'],
 
         [
             'type' => 'item', 'label' => 'Pesanan', 'icon' => 'bi-bag',
             'route' => 'admin.orders.index',
+        ],
+        [
+            'type' => 'item', 'label' => 'Pembayaran', 'icon' => 'bi-credit-card',
+            'route' => 'admin.payments.index',
+        ],
+        [
+            'type' => 'item', 'label' => 'Pengiriman', 'icon' => 'bi-truck',
+            'route' => 'admin.shipments.index',
         ],
         [
             'type' => 'item', 'label' => 'Produk', 'icon' => 'bi-box-seam',
@@ -53,6 +67,29 @@ return [
         ],
 
         [
+            'type' => 'item',
+            'label' => 'Monitoring Transaksi',
+            'icon' => 'bi-activity',
+            'route' => 'owner.monitoring.index',
+        ],
+        [
+            'type' => 'item',
+            'label' => 'Profil Saya',
+            'icon' => 'bi-person-circle',
+            'route' => 'profile.index',
+        ],
+
+        [
+            'type' => 'section', 'label' => 'Pengguna'],
+
+        [
+            'type' => 'item',
+            'label' => 'Kelola Akun',
+            'icon' => 'bi-people',
+            'route' => 'owner.users.index',
+        ],
+
+        [
             'type' => 'item', 'label' => 'Tampilan Toko', 'icon' => 'bi-images',
             'route' => 'admin.media.site',
         ],
@@ -76,8 +113,12 @@ return [
             'route' => 'owner.reports.inventory',
         ],
 
-        ['type' => 'section', 'label' => 'Katalog (hanya baca)'],
+        ['type' => 'section', 'label' => 'Katalog'],
 
+        [
+            'type' => 'item', 'label' => 'Kelola Produk', 'icon' => 'bi-box-seam',
+            'route' => 'admin.products.index',
+        ],
         [
             'type' => 'item', 'label' => 'Lihat Katalog Toko', 'icon' => 'bi-shop',
             'route' => 'store.catalog',
@@ -86,6 +127,13 @@ return [
             'type' => 'item', 'label' => 'Kategori', 'icon' => 'bi-tags',
             'route' => null,
             'soon' => true,
+        ],
+
+        ['type' => 'section', 'label' => 'Pengaturan'],
+
+        [
+            'type' => 'item', 'label' => 'Pengaturan Bisnis', 'icon' => 'bi-gear',
+            'route' => 'owner.settings.index',
         ],
     ],
 

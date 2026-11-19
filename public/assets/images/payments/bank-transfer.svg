@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 48" role="img" aria-label="Transfer Bank">
+    <g fill="#1f3a5f">
+        <path d="M6 21 20 12l14 9v3H6z"/>
+        <rect x="9" y="26" width="4" height="12" rx="1"/>
+        <rect x="18" y="26" width="4" height="12" rx="1"/>
+        <rect x="27" y="26" width="4" height="12" rx="1"/>
+        <rect x="6" y="40" width="28" height="4" rx="1.5"/>
+    </g>
+    <text x="44" y="23" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#1f3a5f" letter-spacing="0.4">BANK</text>
+    <text x="44" y="36" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#bd777c" letter-spacing="0.4">TRANSFER</text>
+</svg>

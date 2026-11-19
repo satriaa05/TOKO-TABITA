@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\SaleStatus;
-use App\Enums\StockMovementType;
 use App\Models\AuditLog;
 use App\Models\Sale;
 use App\Models\User;
@@ -22,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  */
 class RefundService
 {
-    public function __construct(private readonly StockService $stock) {}
+    public function __construct(private readonly StockReleaseService $releases) {}
 
     /**
      * Batalkan transaksi dan kembalikan stoknya.
@@ -55,22 +54,13 @@ class RefundService
                 ]);
             }
 
-            // Kembalikan stok produk yang terjual.
-            foreach ($fresh->items as $item) {
-                if (! $item->product_id) {
-                    continue;
-                }
-
-                $this->stock->apply(
-                    product: $item->product,
-                    qty: (int) $item->qty,
-                    type: StockMovementType::Refund,
-                    user: $user,
-                    note: 'Pengembalian stok dari pembatalan transaksi '.$fresh->invoice_number.'.',
-                    refType: 'sale',
-                    refId: $fresh->id,
-                );
-            }
+            // Kembalikan stok produk DAN varian tepat satu kali.
+            $this->releases->release(
+                $fresh,
+                $user,
+                \App\Enums\StockMovementType::Refund,
+                'Pengembalian stok dari pembatalan transaksi '.$fresh->invoice_number.'.'
+            );
 
             $fresh->update([
                 'status' => SaleStatus::Refunded->value,

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Sale;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -35,19 +34,19 @@ class DocumentNumberService
         $date = now()->format('Ymd');
         $base = $prefix.'-'.$date;
 
-        // Lock tabel supaya dua request bersamaan tidak menghasilkan nomor sama.
-        return DB::transaction(function () use ($model, $column, $base) {
-            $last = $model::query()
-                ->where($column, 'like', $base.'-%')
-                ->orderByDesc($column)
-                ->lockForUpdate()
-                ->first();
+        // Dipanggil dari dalam transaksi checkout yang sudah mengunci baris
+        // terakhir. Tidak membuka transaksi bersarang agar lockForUpdate tetap
+        // berlaku, terutama di MySQL/Postgres saat banyak checkout bersamaan.
+        $last = $model::query()
+            ->where($column, 'like', $base.'-%')
+            ->orderByDesc($column)
+            ->lockForUpdate()
+            ->first();
 
-            $sequence = $last
-                ? ((int) Str::afterLast($last->{$column}, '-')) + 1
-                : 1;
+        $sequence = $last
+            ? ((int) Str::afterLast($last->{$column}, '-')) + 1
+            : 1;
 
-            return $base.'-'.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
-        });
+        return $base.'-'.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 }

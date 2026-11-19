@@ -180,8 +180,8 @@
                             @else
                                 <a href="{{ route('login') }}" class="st-wishlist" aria-label="Masuk untuk menyimpan {{ $product->name }} ke wishlist"><i class="bi bi-heart" aria-hidden="true"></i></a>
                             @endauth
-                            @if ($product->primaryPhoto)
-                                <img src="{{ $product->primaryPhoto->url() }}" class="st-product-img" alt="Foto produk {{ $product->name }}" style="object-fit: cover;">
+                            @if ($product->displayPhoto())
+                                <img src="{{ $product->displayPhoto()->url() }}" class="st-product-img" alt="Foto produk {{ $product->name }}" style="object-fit: cover;">
                             @else
                                 <img src="{{ asset('assets/images/products/dresses/linen-blazer-dress.jpg') }}" class="st-product-img" alt="Foto produk {{ $product->name }}" style="object-fit: cover;">
                             @endif

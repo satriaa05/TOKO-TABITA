@@ -69,6 +69,30 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(CustomerNotification::class);
+    }
+
+    public function unreadNotifications(): HasMany
+    {
+        return $this->hasMany(CustomerNotification::class)->whereNull('read_at');
+    }
+
+    public function avatarUrl(): string
+    {
+        if ($this->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->avatar)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+        }
+
+        return asset('assets/images/avatar-default.svg');
+    }
+
     // -----------------------------------------------------------------
     // Helper role
     // -----------------------------------------------------------------
@@ -89,5 +113,18 @@ class User extends Authenticatable
     public function hasRole(UserRole ...$roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    public function hasPermission(string $key): bool
+    {
+        if ($this->isOwner()) {
+            return true;
+        }
+
+        return \Illuminate\Support\Facades\DB::table('role_permissions')
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('role_permissions.role', $this->role?->value)
+            ->where('permissions.key', $key)
+            ->exists();
     }
 }

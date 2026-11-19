@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -27,11 +28,21 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Memastikan akun yang login masih aktif.
             'active' => EnsureAccountIsActive::class,
+
+            // Permission berbasis database (Owner selalu diizinkan).
+            'permission' => EnsurePermission::class,
+        ]);
+
+        // Webhook dari provider tidak punya session/CSRF token.
+        $middleware->validateCsrfTokens(except: [
+            'payments/midtrans/webhook',
+            'shipping/biteship/webhook',
         ]);
 
         // Pengguna yang belum login diarahkan ke halaman login dengan flash message.
         $middleware->redirectGuestsTo(function (Request $request) {
             session()->flash('auth_error', 'Silakan login terlebih dahulu untuk melanjutkan pembelian di Tabita Modiste.');
+
             return route('login');
         });
     })

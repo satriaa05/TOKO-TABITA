@@ -30,9 +30,9 @@
                                 </button>
                             </form>
 
-                            @if ($product->primaryPhoto)
+                            @if ($product->displayPhoto())
                                 <a href="{{ route('store.product', $product) }}">
-                                    <img src="{{ $product->primaryPhoto->url() }}" class="st-product-img" alt="Foto produk {{ $product->name }}" style="object-fit: cover;">
+                                    <img src="{{ $product->displayPhoto()->url() }}" class="st-product-img" alt="Foto produk {{ $product->name }}" style="object-fit: cover;">
                                 </a>
                             @else
                                 <a href="{{ route('store.product', $product) }}" aria-label="Lihat detail {{ $product->name }}">

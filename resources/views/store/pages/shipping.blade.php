@@ -16,7 +16,7 @@
             <h2 class="h5"><i class="bi bi-truck" style="color: var(--rose);" aria-hidden="true"></i> Pengiriman</h2>
             <ul class="mt-2 mb-0" style="color: var(--muted);">
                 <li><strong>Gratis ongkir</strong> untuk pembelian di atas Rp 500.000.</li>
-                <li>Pengiriman dalam kota Bandung 1–2 hari kerja; luar kota 2–6 hari kerja (tergantung kurir &amp; tujuan).</li>
+                <li>Pengiriman dalam kota Semarang 1–2 hari kerja; luar kota 2–6 hari kerja (tergantung kurir &amp; tujuan).</li>
                 <li>Pesanan diproses setelah bukti pembayaran (transfer) dikonfirmasi admin. Anda akan menerima informasi resi via WhatsApp.</li>
                 <li>Biaya pengiriman untuk pesanan di bawah Rp 500.000 akan dikonfirmasikan admin via WhatsApp sebelum pengiriman.</li>
             </ul>

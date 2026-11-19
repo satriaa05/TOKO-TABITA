@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Masuk') &middot; {{ config('pos.store.name') }}</title>
+    <title>@yield('title', 'Masuk') &middot; {{ store_profile()->name() }}</title>
 
     {{-- Google Fonts: Playfair Display (heading) + Poppins (body) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -13,7 +13,9 @@
         <h1 class="store-section-title mb-1">Panduan Ukuran</h1>
         <p class="text-muted-2 mb-4">Semua ukuran dalam sentimeter (cm). Jika ragu antara dua ukuran, kami sarankan pilih satu ukuran di atas. Ukur lingkar dada/pinggang Anda dengan pita meter saat berdiri rileks.</p>
 
-        @php($sets = config('size_charts.sets'))
+        @php
+            $sets = config('size_charts.sets');
+        @endphp
         @foreach (['dress' => 'Dress & Gaun', 'top' => 'Atasan & Blouse', 'bottom' => 'Bawahan (Celana/Rok)', 'hijab' => 'Hijab'] as $key => $label)
             @continue(! isset($sets[$key]))
             <h2 class="h6 mt-4 mb-2" style="color: var(--rose); letter-spacing: .04em; text-transform: uppercase;">{{ $label }}</h2>
@@ -35,9 +37,11 @@
             <h2 class="h6">Masih ragu?</h2>
             <p class="small text-muted-2 mb-0">
                 Tim kami siap membantu memilih ukuran yang paling pas untuk Anda —
-                @if (config('pos.store.phone'))
-                    @php($wa = '62'.ltrim(preg_replace('/\D+/', '', (string) config('pos.store.phone')), '0'))
-                    <a href="https://wa.me/{{ $wa }}" target="_blank" rel="noopener">chat via WhatsApp</a>.
+                @php
+                    $sizeWa = store_profile()->whatsappUrl('Halo, saya ingin bertanya tentang panduan ukuran.');
+                @endphp
+                @if ($sizeWa)
+                    <a href="{{ $sizeWa }}" target="_blank" rel="noopener noreferrer">chat via WhatsApp</a>.
                 @else
                     hubungi kami via WhatsApp setelah nomor toko diaktifkan.
                 @endif

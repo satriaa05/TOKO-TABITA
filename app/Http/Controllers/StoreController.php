@@ -2,19 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PaymentGatewayException;
 use App\Models\Category;
+use App\Models\CustomerAddress;
 use App\Models\Media;
+use App\Models\PaymentChannel;
 use App\Models\PaymentProof;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Subscriber;
+use App\Models\Voucher;
 use App\Models\Wishlist;
+use App\Services\BiteshipService;
+use App\Services\MapService;
+use App\Services\MidtransService;
 use App\Services\OnlineOrderService;
+use App\Services\PaymentService;
 use App\Services\PosCartService;
 use App\Services\PromotionService;
 use App\Services\ShippingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -36,6 +47,10 @@ class StoreController extends Controller
         private readonly PromotionService $promotions,
         private readonly OnlineOrderService $orders,
         private readonly ShippingService $shipping,
+        private readonly MidtransService $midtrans,
+        private readonly PaymentService $payments,
+        private readonly MapService $maps,
+        private readonly BiteshipService $biteship,
     ) {}
 
     /**
@@ -141,6 +156,14 @@ class StoreController extends Controller
         $size = $variantCheck['size'];
         $color = $variantCheck['color'];
         $qty = (int) ($data['qty'] ?? 1);
+        $already = $this->cart->qtyFor($product->id, $size, $color);
+
+        if ($variantCheck['variant'] !== null && $already + $qty > (int) $variantCheck['variant']->stock) {
+            return back()->withInput()->with(
+                'error',
+                'Stok varian ini tersisa '.(int) $variantCheck['variant']->stock.'; keranjang Anda sudah berisi '.$already.'.'
+            );
+        }
 
         $this->cart->add($product, $qty, $size, $color);
 
@@ -201,43 +224,312 @@ class StoreController extends Controller
         $data['idempotencyKey'] = Str::random(40);
         $data['shippingZones'] = $this->shipping->zones();
         $data['shippingFreeThreshold'] = (float) config('pos.shipping.free_threshold', 0);
+        $data['addresses'] = auth()->user()->addresses()
+            ->orderByDesc('is_default')
+            ->latest('id')
+            ->get();
+        $data['paymentChannels'] = PaymentChannel::activeChannels();
+        $data['couriers'] = (array) config('shipping.couriers', []);
+
+        $voucher = $this->sessionVoucher();
+        $voucherDiscount = $voucher
+            ? $voucher->discountFor(round((float) $data['subtotal'] - (float) $data['discount'], 2))
+            : 0.0;
+
+        $data['voucher'] = $voucher;
+        $data['voucherDiscount'] = $voucherDiscount;
+        $data['displayTotal'] = round(
+            max(0, (float) $data['subtotal'] - (float) $data['discount'] - $voucherDiscount)
+            + (float) $data['shipping']['cost'],
+            2
+        );
 
         return view('store.checkout', $data);
     }
 
     /**
-     * Simpan pesanan online (status "Menunggu Konfirmasi").
+     * Validasi kode voucher via AJAX. Diskon dihitung di server.
+     */
+    public function validateVoucher(Request $request): JsonResponse
+    {
+        $code = strtoupper(trim((string) $request->input('code', '')));
+
+        if ($code === '') {
+            return response()->json(['ok' => false, 'message' => 'Kode voucher wajib diisi.'], 422);
+        }
+
+        $voucher = Voucher::query()->where('code', $code)->first();
+
+        if (! $voucher || ! $voucher->isValidNow()) {
+            return response()->json(['ok' => false, 'message' => 'Kode voucher tidak valid atau sudah berakhir.'], 422);
+        }
+
+        $data = $this->cartData();
+        $discount = $voucher->discountFor(round((float) $data['subtotal'] - (float) $data['discount'], 2));
+
+        if ($discount <= 0) {
+            return response()->json(['ok' => false, 'message' => 'Minimum belanja voucher ini belum terpenuhi.'], 422);
+        }
+
+        session(['checkout_voucher' => $voucher->code]);
+
+        return response()->json([
+            'ok' => true,
+            'code' => $voucher->code,
+            'name' => $voucher->name,
+            'discount' => $discount,
+            'discount_label' => rupiah($discount),
+        ]);
+    }
+
+    /**
+     * Ambil tarif ongkir real-time dari Biteship untuk ditampilkan di checkout.
+     * Harga akhir tetap dihitung ulang server saat pesanan dibuat.
+     */
+    public function checkRates(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'postal_code' => ['required', 'string', 'max:15'],
+        ]);
+
+        $data = $this->cartData();
+        $weight = max(1000, (int) $data['count'] * 500);
+
+        $result = $this->biteship->rates(
+            $validated['postal_code'],
+            round((float) $data['subtotal'] - (float) $data['discount'], 2),
+            $weight
+        );
+
+        return response()->json($result, $result['ok'] ? 200 : 422);
+    }
+
+    public function removeVoucher(): RedirectResponse
+    {
+        session()->forget('checkout_voucher');
+
+        return redirect()->route('store.checkout')->with('success', 'Voucher dihapus.');
+    }
+
+    /**
+     * Simpan pesanan online (status "Menunggu Konfirmasi", pembayaran UNPAID).
      */
     public function placeOrder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'buyer_name' => ['required', 'string', 'max:150'],
-            'buyer_phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s]{8,30}$/'],
-            'buyer_address' => ['required', 'string', 'max:1000'],
+            'address_id' => ['nullable', 'integer', 'exists:customer_addresses,id'],
+            'buyer_name' => ['nullable', 'required_without:address_id', 'string', 'max:150'],
+            'buyer_phone' => ['nullable', 'required_without:address_id', 'string', 'max:30', 'regex:/^[0-9+\-\s]{8,30}$/'],
+            'buyer_address' => ['nullable', 'required_without:address_id', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'province' => ['nullable', 'string', 'max:100'],
+            'postal_code' => ['nullable', 'string', 'max:15'],
             'buyer_note' => ['nullable', 'string', 'max:255'],
             'shipping_zone' => ['nullable', 'string', 'max:32'],
-            'shipping_provider' => ['nullable', 'string', 'max:64'],
+            'courier' => ['nullable', 'string', 'max:40'],
+            'service' => ['nullable', 'string', 'max:60'],
+            'payment_method' => ['nullable', 'string', 'max:30'],
+            'voucher_code' => ['nullable', 'string', 'max:40'],
             'idempotency_key' => ['required', 'string', 'max:64'],
         ], [
             'buyer_phone.regex' => 'Nomor WhatsApp harus berisi angka (opsional angka 0/+).',
         ]);
 
+        $address = null;
+
+        if (! empty($validated['address_id'])) {
+            $address = CustomerAddress::query()
+                ->where('user_id', auth()->id())
+                ->find($validated['address_id']);
+
+            abort_unless($address !== null, 403, 'Alamat ini bukan milik Anda.');
+        }
+
+        $courierLabel = null;
+
+        if (! empty($validated['courier'])) {
+            $catalog = (array) config('shipping.couriers', []);
+            $courierName = $catalog[$validated['courier']]['name'] ?? $validated['courier'];
+            $serviceName = $catalog[$validated['courier']]['services'][$validated['service'] ?? ''] ?? null;
+            $courierLabel = $serviceName
+                ? $courierName.' ('.$serviceName.')'
+                : $courierName;
+        }
+
         $buyer = [
-            'name' => $validated['buyer_name'],
-            'phone' => $validated['buyer_phone'],
-            'address' => $validated['buyer_address'],
+            'name' => $address?->recipient_name ?: $validated['buyer_name'],
+            'phone' => $address?->phone ?: $validated['buyer_phone'],
+            'address' => $address ? $address->fullAddress() : $validated['buyer_address'],
             'note' => $validated['buyer_note'] ?? null,
             'shipping_zone' => $validated['shipping_zone'] ?? null,
-            'shipping_provider' => $validated['shipping_provider'] ?? null,
+            'shipping_provider' => $courierLabel,
+            'postal_code' => $address?->postal_code ?: ($validated['postal_code'] ?? null),
+        ];
+
+        $options = [
+            'payment_method' => $validated['payment_method'] ?? 'transfer',
+            'voucher_code' => $validated['voucher_code'] ?? session('checkout_voucher'),
+            'address_id' => $address?->id,
+            'courier' => $validated['courier'] ?? null,
+            'service' => $validated['service'] ?? null,
         ];
 
         try {
-            $sale = $this->orders->place($buyer, $validated['idempotency_key']);
+            $sale = $this->orders->place($buyer, $validated['idempotency_key'], $options);
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         }
 
-        return redirect()->route('store.orderSuccess', $sale);
+        session()->forget('checkout_voucher');
+
+        return redirect()->route('store.payment.show', $sale);
+    }
+
+    /**
+     * Halaman pembayaran: instruksi transfer, nominal, nomor pesanan,
+     * batas waktu (bila disediakan gateway), dan unggah bukti untuk manual.
+     */
+    public function payment(Sale $sale): View
+    {
+        abort_unless((int) $sale->user_id === (int) auth()->id(), 403);
+
+        $sale->load(['items', 'paymentTransactions.channel', 'paymentProofs', 'shipments']);
+        $transaction = $sale->paymentTransactions->first();
+        $gatewayError = null;
+
+        if ($transaction && $transaction->channel->isAutomatic()) {
+            if (! $this->midtrans->isConfigured()) {
+                $gatewayError = 'Metode otomatis belum tersedia karena kredensial payment gateway belum diisi oleh Admin.';
+            } elseif (! $transaction->provider_reference) {
+                try {
+                    $this->midtrans->charge($transaction);
+                    $transaction->refresh();
+                } catch (PaymentGatewayException $e) {
+                    $gatewayError = $e->getMessage();
+                }
+            }
+        }
+
+        return view('store.payment', compact('sale', 'transaction', 'gatewayError'));
+    }
+
+    /**
+     * Pengecekan status hanya membaca data server / DB.
+     * Untuk pembayaran manual, status berubah hanya setelah verifikasi Admin.
+     */
+    public function checkPaymentStatus(Sale $sale): RedirectResponse
+    {
+        abort_unless((int) $sale->user_id === (int) auth()->id(), 403);
+
+        $transaction = $sale->paymentTransactions->first();
+
+        if ($transaction && $transaction->channel->isAutomatic()
+            && $this->midtrans->isConfigured() && $transaction->provider_reference) {
+            try {
+                $this->payments->syncFromGateway($transaction);
+            } catch (\Throwable) {
+                // Fallback gagal: status tetap dibaca dari database.
+            }
+        }
+
+        $status = $sale->fresh()->payment_status;
+        $note = $status->value === 'paid'
+            ? 'Pembayaran Anda sudah dikonfirmasi.'
+            : 'Status akan berubah otomatis bila gateway mengirim notifikasi, atau setelah Admin memverifikasi bukti transfer Anda.';
+
+        return back()->with('success', 'Status pembayaran: '.$status->label().'. '.$note);
+    }
+
+    /**
+     * Halaman lacak pengiriman untuk pesanan milik pelanggan.
+     */
+    public function tracking(Sale $sale): View
+    {
+        abort_unless((int) $sale->user_id === (int) auth()->id(), 403);
+
+        $sale->load(['items', 'paymentTransactions.channel', 'shipments.events', 'shipments.locations']);
+        $shipment = $sale->shipments->first();
+
+        $map = [
+            'configured' => $this->maps->isConfigured(),
+            'origin' => null,
+            'destination' => null,
+            'last_scan' => null,
+            'scans' => [],
+            'polyline' => null,
+            'attribution' => $this->maps->attribution(),
+            'tile_url' => (string) config('shipping.maps.tile_url'),
+            'note' => null,
+        ];
+
+        if ($shipment && $map['configured']) {
+            $store = store_profile();
+            $originText = trim($store->location().' '.$store->address().' '.config('pos.shipping.origin_postal_code'));
+            $destinationText = trim($sale->buyer_address.' '.$sale->buyer_postal_code);
+
+            $map['origin'] = Cache::remember('osm.geocode.store.'.md5($originText), 86400,
+                fn () => $this->maps->geocode($originText));
+            $map['destination'] = Cache::remember('osm.geocode.buyer.'.$sale->id, 86400,
+                fn () => $this->maps->geocode($destinationText));
+
+            if ($shipment->hasScanCoordinate()) {
+                $map['last_scan'] = [
+                    'lat' => $shipment->last_scan_latitude,
+                    'lng' => $shipment->last_scan_longitude,
+                ];
+            }
+
+            $map['scans'] = $shipment->events
+                ->filter(fn ($event) => $event->hasCoordinate())
+                ->map(fn ($event) => [
+                    'lat' => $event->latitude,
+                    'lng' => $event->longitude,
+                    'label' => $event->normalized_status->label().' · '.$event->location,
+                ])
+                ->values()
+                ->all();
+
+            if ($map['origin'] && $map['destination']) {
+                $map['polyline'] = Cache::remember('osm.route.'.$sale->id, 21600,
+                    fn () => $this->maps->route($map['origin'], $map['destination']));
+            }
+
+            if (! $shipment->isLive()) {
+                $map['note'] = 'Peta OpenStreetMap menampilkan lokasi asal, tujuan, dan scan terakhir dari data pengiriman. GPS kurir secara langsung tidak tersedia untuk ekspedisi reguler.';
+            } else {
+                $map['note'] = 'Peta OpenStreetMap menampilkan titik scan. Posisi kurir real-time tersedia lewat tautan resmi Biteship di atas.';
+            }
+        }
+
+        return view('store.tracking', compact('sale', 'shipment', 'map'));
+    }
+
+    /**
+     * Partial tracking yang di-refresh berkala via polling (real-time dari DB server).
+     */
+    public function trackingPartial(Sale $sale): Response
+    {
+        abort_unless((int) $sale->user_id === (int) auth()->id(), 403);
+
+        $sale->load(['shipments.events', 'shipments.locations']);
+        $shipment = $sale->shipments->first();
+
+        return response(
+            view('store.partials.tracking-live', compact('sale', 'shipment'))->render()
+        )->header('Cache-Control', 'no-store');
+    }
+
+    private function sessionVoucher(): ?Voucher
+    {
+        $code = session('checkout_voucher');
+
+        if (! $code) {
+            return null;
+        }
+
+        $voucher = Voucher::query()->where('code', $code)->first();
+
+        return $voucher && $voucher->isValidNow() ? $voucher : null;
     }
 
     /**
@@ -245,6 +537,7 @@ class StoreController extends Controller
      */
     public function orderSuccess(Sale $sale): View
     {
+        abort_unless((int) $sale->user_id === (int) auth()->id(), 403, 'Pesanan ini bukan milik Anda.');
         abort_unless($sale->status === \App\Enums\SaleStatus::PendingPayment, 404);
 
         $sale->load('items');
@@ -254,13 +547,10 @@ class StoreController extends Controller
             (float) $sale->subtotal - (float) $sale->discount_total,
         );
 
-        $rawWa = (string) config('pos.store.phone');
+        $rawWa = store_profile()->whatsappNumber();
         $waLink = null;
 
-        if ($rawWa !== '') {
-            $number = preg_replace('/\D+/', '', $rawWa);
-            $number = preg_replace('/^0/', '62', $number);
-
+        if ($rawWa !== null) {
             $items = $sale->items
                 ->map(fn ($item) => '- '.$item->product_name.' x'.$item->qty.' ('.rupiah($item->total).')')
                 ->implode("\n");
@@ -274,7 +564,7 @@ class StoreController extends Controller
                 ."Ongkir: ".rupiah($sale->shipping_cost)."\n"
                 .'Total: '.rupiah($sale->total);
 
-            $waLink = 'https://wa.me/'.$number.'?text='.rawurlencode($text);
+            $waLink = store_profile()->whatsappUrl($text);
         }
 
         return view('store.order-success', compact('sale', 'waLink', 'shippingInfo'));
@@ -357,7 +647,7 @@ class StoreController extends Controller
     {
         abort_unless((int) $sale->user_id === (int) auth()->id(), 403);
 
-        $sale->load('items.product', 'payments', 'paymentProofs');
+        $sale->load('items.product', 'payments', 'paymentProofs', 'paymentTransactions.channel');
 
         return view('store.order-detail', compact('sale'));
     }
@@ -445,7 +735,25 @@ class StoreController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        $product->load(['photos', 'category', 'variants']);
+        $product->load(['photos', 'category', 'variants', 'colors']);
+
+        // Data galeri per warna disiapkan di server supaya JS hanya berganti
+        // sumber gambar; tidak ada URL/foto yang dipercaya dari browser.
+        $gallery = [];
+
+        foreach ($product->colors as $color) {
+            $gallery[$color->name] = $product->photosForColor($color->name, (int) $color->id)
+                ->map(fn ($photo) => ['src' => $photo->url(), 'alt' => 'Foto '.$product->name.' '.$color->name])
+                ->values()
+                ->all();
+        }
+
+        if ($gallery === []) {
+            $gallery[''] = $product->photosForColor(null)
+                ->map(fn ($photo) => ['src' => $photo->url(), 'alt' => 'Foto '.$product->name])
+                ->values()
+                ->all();
+        }
 
         $categoryName = strtolower((string) $product->category?->name);
         $set = 'default';
@@ -461,12 +769,9 @@ class StoreController extends Controller
 
         $chart = config('size_charts.sets.'.$set, config('size_charts.sets.default'));
 
-        $rawWa = (string) config('pos.store.phone');
-        $waNumber = $rawWa !== ''
-            ? preg_replace('/^0/', '62', preg_replace('/\D+/', '', $rawWa))
-            : null;
+        $waNumber = store_profile()->whatsappNumber();
 
-        return view('store.product', compact('product', 'chart', 'waNumber'));
+        return view('store.product', compact('product', 'chart', 'waNumber', 'gallery'));
     }
 
     /**
@@ -474,35 +779,36 @@ class StoreController extends Controller
      * wajib cocok dengan varian yang ada. Tidak melempar exception —
      * pemanggil menampilkan pesan lewat flash session.
      *
-     * @return array{size: ?string, color: ?string, error: ?string}
+     * @return array{size: ?string, color: ?string, error: ?string, variant: ?\App\Models\ProductVariant}
      */
     private function validVariant(Product $product, ?string $size, ?string $color): array
     {
         $product->loadMissing('variants');
 
         if ($product->variants->isEmpty()) {
-            return ['size' => null, 'color' => null, 'error' => null];
+            return ['size' => null, 'color' => null, 'error' => null, 'variant' => null];
         }
 
         $size = $size !== null ? trim($size) : '';
         $color = $color !== null ? trim($color) : '';
 
         if ($size === '' || $color === '') {
-            return ['size' => null, 'color' => null, 'error' => 'Pilih ukuran dan warna terlebih dahulu.'];
+            return ['size' => null, 'color' => null, 'error' => 'Pilih ukuran dan warna terlebih dahulu.', 'variant' => null];
         }
 
         $variant = $product->variants->first(fn ($v) => (string) $v->size === $size
-            && (string) $v->color === $color);
+            && (string) $v->color === $color
+            && ($v->is_active ?? true));
 
         if (! $variant) {
-            return ['size' => null, 'color' => null, 'error' => 'Varian ini tidak tersedia. Pilih varian lain.'];
+            return ['size' => null, 'color' => null, 'error' => 'Varian ini tidak tersedia. Pilih varian lain.', 'variant' => null];
         }
 
         if ((int) $variant->stock < 1) {
-            return ['size' => null, 'color' => null, 'error' => 'Stok untuk varian ini habis. Pilih varian lain.'];
+            return ['size' => null, 'color' => null, 'error' => 'Stok untuk varian ini habis. Pilih varian lain.', 'variant' => null];
         }
 
-        return ['size' => $size, 'color' => $color, 'error' => null];
+        return ['size' => $size, 'color' => $color, 'error' => null, 'variant' => $variant];
     }
 
     /**

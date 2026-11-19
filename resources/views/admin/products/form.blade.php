@@ -235,8 +235,71 @@
             @php
                 /** Galeri foto produk dari tabel media (foto utama paling depan). */
                 $photos = $product->photos()->get();
+                $colorOptions = $product->colors;
             @endphp
             <div class="row g-3 mt-0">
+                {{-- Warna produk --}}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-palette"></i> Variasi Warna</span>
+                            <span class="badge text-bg-secondary">{{ $colorOptions->count() }} warna</span>
+                        </div>
+                        <div class="card-body">
+                            @if ($colorOptions->isNotEmpty())
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    @foreach ($colorOptions as $color)
+                                        <span class="badge rounded-pill border d-inline-flex align-items-center gap-1"
+                                              style="background: {{ $color->swatch() }}; color: #fff; {{ $color->is_active ? '' : 'opacity:.45;' }}">
+                                            {{ $color->name }}
+                                        </span>
+                                        <form method="POST" action="{{ route('admin.colors.update', $color) }}" class="d-flex gap-1 align-items-center">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="text" name="name" value="{{ $color->name }}" class="form-control form-control-sm" style="width:110px" maxlength="50" required>
+                                            <input type="color" name="hex" value="{{ $color->hex ?: '#000000' }}" class="form-control form-control-sm" style="width:45px;padding:2px" title="Warna swatch">
+                                            <button type="submit" class="btn btn-sm btn-light" title="Simpan warna"><i class="bi bi-check"></i></button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.colors.toggle', $color) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-sm btn-light" title="{{ $color->is_active ? 'Nonaktifkan' : 'Aktifkan' }} warna">
+                                                <i class="bi bi-{{ $color->is_active ? 'eye-slash' : 'eye' }}"></i>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.colors.destroy', $color) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-light text-danger" title="Hapus warna"
+                                                    data-confirm="Hapus warna {{ $color->name }}?">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <form method="POST" action="{{ route('admin.colors.store', $product) }}" class="row g-2 align-items-end">
+                                @csrf
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label small mb-1" for="c-name">Nama Warna</label>
+                                    <input type="text" id="c-name" name="name" class="form-control form-control-sm" placeholder="mis. Cream" maxlength="50" required>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label small mb-1" for="c-hex">Swatch</label>
+                                    <input type="color" id="c-hex" name="hex" value="#111111" class="form-control form-control-sm" style="padding:2px">
+                                </div>
+                                <div class="col-12 col-md-7">
+                                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Tambah Warna</button>
+                                </div>
+                            </form>
+                            <p class="small text-muted-2 mt-2 mb-0">
+                                Warna yang sudah dipakai transaksi tidak bisa dihapus — cukup dinonaktifkan agar riwayat tetap utuh.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Varian (Ukuran & Warna) --}}
                 <div class="col-12">
                     <div class="card">
@@ -258,35 +321,90 @@
                                                 <th>Warna</th>
                                                 <th>Ukuran</th>
                                                 <th class="text-end">Stok</th>
-                                                <th class="text-end">Aksi</th>
+                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach ($product->variants->sortBy([['size', 'asc'], ['color', 'asc']]) as $variant)
                                                 <tr>
-                                                    <td>{{ $variant->color ?? '-' }}</td>
+                                                    <td>
+                                                        {{ $variant->color ?? '-' }}
+                                                        @if ($variant->color_id)
+                                                            <span class="badge text-bg-light">terhubung</span>
+                                                        @endif
+                                                    </td>
                                                     <td>{{ $variant->size ?? '-' }}</td>
                                                     <td class="text-end font-money">{{ $variant->stock }}</td>
-                                                    <td class="text-end">
-                                                        <form method="POST"
-                                                              action="{{ route('admin.variants.destroy', $variant) }}"
-                                                              class="d-inline">
+                                                    <td>
+                                                        <span class="badge {{ $variant->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">
+                                                            {{ $variant->is_active ? 'Aktif' : 'Nonaktif' }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="table-light small">
+                                                    <td colspan="4">
+                                                        <form method="POST" action="{{ route('admin.variants.update', $variant) }}"
+                                                              class="row g-1 align-items-end">
                                                             @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-light text-danger"
-                                                                    title="Hapus varian" aria-label="Hapus varian {{ $variant->label() }}"
-                                                                    data-confirm="Hapus varian {{ $variant->label() }}?">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
+                                                            @method('PUT')
+                                                            <div class="col-6 col-md-3">
+                                                                <label class="form-label small mb-0">Warna</label>
+                                                                <select name="color_id" class="form-select form-select-sm">
+                                                                    <option value="">—</option>
+                                                                    @foreach ($colorOptions as $color)
+                                                                        <option value="{{ $color->id }}"
+                                                                            {{ (int) $variant->color_id === $color->id || (! $variant->color_id && $variant->color === $color->name) ? 'selected' : '' }}>
+                                                                            {{ $color->name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-6 col-md-2">
+                                                                <label class="form-label small mb-0">Ukuran</label>
+                                                                <input type="text" name="size" value="{{ $variant->size }}"
+                                                                       class="form-control form-control-sm" maxlength="20">
+                                                            </div>
+                                                            <div class="col-6 col-md-2">
+                                                                <label class="form-label small mb-0">Stok</label>
+                                                                <input type="number" name="stock" value="{{ $variant->stock }}"
+                                                                       class="form-control form-control-sm" min="0" required>
+                                                            </div>
+                                                            <div class="col-6 col-md-2">
+                                                                <label class="form-label small mb-0">Urutan</label>
+                                                                <input type="number" name="sort_order" value="{{ $variant->sort_order }}"
+                                                                       class="form-control form-control-sm" min="0">
+                                                            </div>
+                                                            <div class="col-12 col-md-3 d-flex gap-1">
+                                                                <button type="submit" class="btn btn-sm btn-primary" title="Simpan varian">
+                                                                    <i class="bi bi-check"></i> Simpan
+                                                                </button>
+                                                            </div>
                                                         </form>
+                                                        <div class="mt-1 d-flex gap-1">
+                                                            <form method="POST" action="{{ route('admin.variants.toggle', $variant) }}">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <button type="submit" class="btn btn-sm btn-light" title="Aktif/nonaktif varian">
+                                                                    <i class="bi bi-{{ $variant->is_active ? 'eye-slash' : 'eye' }}"></i>
+                                                                </button>
+                                                            </form>
+                                                            <form method="POST" action="{{ route('admin.variants.destroy', $variant) }}">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-sm btn-light text-danger" title="Hapus varian"
+                                                                        data-confirm="Hapus varian {{ $variant->label() }}?">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th colspan="2" class="text-end">Total Stok</th>
-                                                <th class="text-end font-money">{{ $product->variants->sum('stock') }}</th>
+                                                <th colspan="2" class="text-end">Total Stok Varian Aktif</th>
+                                                <th class="text-end font-money">{{ $product->variants->where('is_active', true)->sum('stock') }}</th>
                                                 <th></th>
                                             </tr>
                                         </tfoot>
@@ -298,10 +416,15 @@
 
                             <form method="POST" action="{{ route('admin.variants.store', $product) }}" class="row g-2 align-items-end">
                                 @csrf
-                                <div class="col-4 col-md-3">
+                                <div class="col-6 col-md-3">
                                     <label class="form-label small mb-1" for="v-color">Warna</label>
-                                    <input type="text" id="v-color" name="color" class="form-control form-control-sm"
-                                           placeholder="mis. Hitam" maxlength="50">
+                                    <select id="v-color" name="color_id" class="form-select form-select-sm">
+                                        <option value="">— tanpa warna —</option>
+                                        @foreach ($colorOptions as $color)
+                                            <option value="{{ $color->id }}">{{ $color->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="hidden" name="color" value="">
                                 </div>
                                 <div class="col-4 col-md-3">
                                     <label class="form-label small mb-1" for="v-size">Ukuran</label>
@@ -323,7 +446,6 @@
                     </div>
                 </div>
 
-                <div class="col-12">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -355,8 +477,22 @@
                                                     {{ $photo->color }}
                                                 </span>
                                             @endif
+                                            @if ($photo->is_color_primary)
+                                                <span class="badge text-bg-info position-absolute top-0 end-0 m-1">
+                                                    Thumbnail warna
+                                                </span>
+                                            @endif
 
                                             <div class="d-flex flex-wrap gap-1 mt-1">
+                                                @unless ($photo->is_color_primary)
+                                                    <form method="POST" action="{{ route('admin.media.color.primary', $photo) }}" class="d-inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="btn btn-sm btn-light" title="Jadikan thumbnail warna">
+                                                            <i class="bi bi-image"></i>
+                                                        </button>
+                                                    </form>
+                                                @endunless
                                                 @unless ($photo->is_primary)
                                                     <form method="POST" action="{{ route('admin.media.primary', $photo) }}" class="d-inline">
                                                         @csrf
@@ -386,15 +522,24 @@
                                                 </button>
                                             </div>
 
-                                            {{-- Label warna per foto (variasi warna) --}}
+                                            {{-- Label / entitas warna per foto --}}
                                             <form method="POST" action="{{ route('admin.media.color', $photo) }}" class="mt-1">
                                                 @csrf
                                                 @method('PATCH')
                                                 <div class="input-group input-group-sm">
+                                                    <select name="color_id" class="form-select form-select-sm" style="max-width:130px">
+                                                        <option value="">— label bebas —</option>
+                                                        @foreach ($colorOptions as $color)
+                                                            <option value="{{ $color->id }}"
+                                                                {{ (int) $photo->color_id === $color->id ? 'selected' : '' }}>
+                                                                {{ $color->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
                                                     <input type="text" name="color" value="{{ $photo->color }}"
                                                            class="form-control" placeholder="Warna" maxlength="50"
                                                            aria-label="Label warna foto">
-                                                    <button type="submit" class="btn btn-light" title="Simpan label warna">
+                                                    <button type="submit" class="btn btn-light" title="Simpan warna foto">
                                                         <i class="bi bi-tag"></i>
                                                     </button>
                                                 </div>
@@ -433,9 +578,14 @@
                                         <div id="preview-product-photos" class="d-flex flex-wrap gap-2 mt-2"></div>
                                     </div>
                                     <div class="col-6 col-lg-3">
-                                        <label class="form-label small mb-1" for="product-photo-color">Label Warna (opsional)</label>
-                                        <input type="text" id="product-photo-color" name="color"
-                                               class="form-control form-control-sm" placeholder="mis. Hitam" maxlength="50">
+                                        <label class="form-label small mb-1" for="product-photo-color">Warna Foto</label>
+                                        <select id="product-photo-color" name="color_id" class="form-select form-select-sm">
+                                            <option value="">— tanpa warna —</option>
+                                            @foreach ($colorOptions as $color)
+                                                <option value="{{ $color->id }}">{{ $color->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" name="color" value="">
                                     </div>
                                     <div class="col-6 col-lg-4">
                                         <button type="submit" class="btn btn-primary btn-sm w-100">

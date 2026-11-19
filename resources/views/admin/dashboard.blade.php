@@ -135,8 +135,8 @@
                             @endforeach
                             @foreach ($latestProducts as $product)
                                 <div class="col-6 col-md-3 col-xl-2">
-                                    @if ($product->primaryPhoto)
-                                        <img src="{{ $product->primaryPhoto->url() }}"
+                                    @if ($product->displayPhoto())
+                                        <img src="{{ $product->displayPhoto()->url() }}"
                                              class="rounded border d-block w-100"
                                              style="height: 120px; object-fit: cover;"
                                              alt="Foto {{ $product->name }}">

@@ -1,11 +1,26 @@
 <?php
 
+use App\Services\StoreProfile;
+
 /**
  * Fungsi bantu global untuk aplikasi POS.
  *
  * File ini di-autoload otomatis oleh Composer (lihat autoload.files
  * pada composer.json).
  */
+if (! function_exists('store_profile')) {
+    /**
+     * Profil toko publik (nama, WhatsApp, Instagram, lokasi, pembayaran).
+     *
+     * Nomor WhatsApp dan identitas toko hanya didefinisikan di satu tempat
+     * (tabel settings + config/pos.php), tidak diulang di file Blade.
+     */
+    function store_profile(): StoreProfile
+    {
+        return app(StoreProfile::class);
+    }
+}
+
 if (! function_exists('rupiah')) {
     /**
      * Format nilai uang ke Rupiah, contoh: 15000 -> "Rp 15.000".

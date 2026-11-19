@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -96,5 +95,11 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        // Katalog metode pembayaran checkout (transfer aktif, gateway menyusul).
+        $this->call(PaymentChannelSeeder::class);
+
+        // Hak akses Admin/Owner.
+        $this->call(PermissionSeeder::class);
     }
 }

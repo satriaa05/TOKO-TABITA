@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\StoreProfile;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +16,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Satu instance per request: seluruh halaman membaca profil toko
+        // (settings + config) lewat satu query yang sama.
+        $this->app->scoped(StoreProfile::class);
     }
 
     /**

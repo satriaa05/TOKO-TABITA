@@ -160,7 +160,12 @@
                                 <tbody>
                                     @foreach ($recentSales as $sale)
                                         <tr>
-                                            <td class="fw-semibold">{{ $sale->invoice_number }}</td>
+                                            <td class="fw-semibold">
+                                                <a href="{{ route('invoice.show', $sale) }}" target="_blank" rel="noopener noreferrer"
+                                                   class="text-decoration-none" title="Cetak invoice">
+                                                    {{ $sale->invoice_number }} <i class="bi bi-printer ms-1" aria-hidden="true"></i>
+                                                </a>
+                                            </td>
                                             <td class="text-muted-2">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
                                             <td>
                                                 <span class="badge {{ $sale->status->badgeClass() }}">

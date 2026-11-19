@@ -79,7 +79,7 @@ function startClock() {
 
     const tick = () => {
         const now = new Date();
-        clock.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+        clock.textContent = now.toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
     };
 
     tick();

@@ -29,9 +29,12 @@ class PosCartService
 
         $items = $this->rawItems();
         $key = $this->keyOf($product->id, $size, $color);
+        $index = $this->findIndex($items, $key);
 
-        if (isset($items[$key])) {
-            $items[$key]['qty'] = (int) $items[$key]['qty'] + $qty;
+        if ($index !== null) {
+            $items[$index]['qty'] = (int) $items[$index]['qty'] + $qty;
+            $items[$index]['size'] = $size;
+            $items[$index]['color'] = $color;
         } else {
             $items[$key] = [
                 'key' => $key,
@@ -42,7 +45,7 @@ class PosCartService
             ];
         }
 
-        session()->put(self::SESSION_KEY, ['items' => $items]);
+        $this->persist($items);
     }
 
     /**
@@ -51,20 +54,21 @@ class PosCartService
     public function updateQty(string $key, int $qty): void
     {
         $items = $this->rawItems();
+        $index = $this->findIndex($items, $key);
 
-        if (! isset($items[$key])) {
+        if ($index === null) {
             return;
         }
 
         if ($qty < 1) {
-            unset($items[$key]);
-            session()->put(self::SESSION_KEY, ['items' => $items]);
+            unset($items[$index]);
+            $this->persist($items);
 
             return;
         }
 
-        $items[$key]['qty'] = $qty;
-        session()->put(self::SESSION_KEY, ['items' => $items]);
+        $items[$index]['qty'] = $qty;
+        $this->persist($items);
     }
 
     /**
@@ -73,8 +77,36 @@ class PosCartService
     public function remove(string $key): void
     {
         $items = $this->rawItems();
-        unset($items[$key]);
-        session()->put(self::SESSION_KEY, ['items' => $items]);
+        $index = $this->findIndex($items, $key);
+
+        if ($index !== null) {
+            unset($items[$index]);
+        }
+
+        $this->persist($items);
+    }
+
+    /**
+     * Cari posisi baris berdasarkan kunci.
+     *
+     * Kompatibel dengan session lama: kunci bisa berupa key array associatif
+     * ATAU field `key` pada tiap baris.
+     *
+     * @param  array<int|string, array<string, mixed>>  $items
+     */
+    private function findIndex(array $items, string $key): int|string|null
+    {
+        if (array_key_exists($key, $items)) {
+            return $key;
+        }
+
+        foreach ($items as $index => $item) {
+            if (($item['key'] ?? null) === $key) {
+                return $index;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -95,7 +127,64 @@ class PosCartService
      */
     private function keyOf(int|string $productId, ?string $size, ?string $color): string
     {
-        return ($color ? trim($color) : 'null').'~' . ($size ? trim($size) : 'null').'~' . $productId;
+        $clean = static fn (?string $value): string => $value === null
+            ? 'null'
+            : (preg_replace('/[^A-Za-z0-9_-]/', '-', trim($value)) ?: 'null');
+
+        return $clean($color).'~'.$clean($size).'~'.$productId;
+    }
+
+    /**
+     * Jumlah satu baris varian yang sekarang ada di keranjang.
+     */
+    public function qtyFor(int|string $productId, ?string $size, ?string $color): int
+    {
+        $key = $this->keyOf($productId, $size, $color);
+
+        foreach ($this->rawItems() as $item) {
+            if (($item['key'] ?? null) === $key) {
+                return (int) $item['qty'];
+            }
+        }
+
+        return 0;
+    }
+
+    private function guardOwner(): void
+    {
+        if (! session()->has(self::SESSION_KEY)) {
+            return;
+        }
+
+        $storedUserId = session(self::SESSION_KEY.'.user_id');
+        $currentUserId = auth()->id();
+
+        // Keranjang tamu yang kemudian login di sesi yang sama boleh dipakai akun itu.
+        if ($storedUserId === null && $currentUserId !== null) {
+            session()->put(self::SESSION_KEY.'.user_id', $currentUserId);
+
+            return;
+        }
+
+        if ((int) $storedUserId !== (int) $currentUserId) {
+            session()->forget(self::SESSION_KEY);
+        }
+    }
+
+    /**
+     * Simpan keranjang beserta pemiliknya.
+     *
+     * Session sudah terisolasi per browser, tetapi menyimpan user_id membuat
+     * keranjang juga terikat akun. Bila akun di session berubah (logout/login
+     * di browser yang sama), isi keranjang lama dibuang, bukan diberikan ke
+     * akun lain.
+     */
+    private function persist(array $items): void
+    {
+        session()->put(self::SESSION_KEY, [
+            'user_id' => auth()->id(),
+            'items' => $items,
+        ]);
     }
 
     /**
@@ -103,6 +192,8 @@ class PosCartService
      */
     public function rawItems(): array
     {
+        $this->guardOwner();
+
         $stored = session(self::SESSION_KEY, ['items' => []]);
         $items = $stored['items'] ?? [];
 
@@ -110,9 +201,11 @@ class PosCartService
             return [];
         }
 
-        return array_values(array_filter($items, function ($item) {
+        // Jangan pakai array_values(): kunci array dipakai untuk update/hapus
+        // baris. Field `key` tetap disimpan sebagai fallback data lama.
+        return array_filter($items, function ($item) {
             return is_array($item) && isset($item['product_id'], $item['qty']) && (int) $item['qty'] > 0;
-        }));
+        });
     }
 
     /**
@@ -151,7 +244,9 @@ class PosCartService
             $variant = null;
 
             if ($product->hasVariants()) {
-                $variant = $product->variants->first(fn ($v) => $v->size == $size && $v->color == $color);
+                $variant = $product->variants->first(fn ($v) => $v->size == $size
+                    && $v->color == $color
+                    && ($v->is_active ?? true));
 
                 if (! $variant) {
                     continue; // Varian tidak lagi tersedia.

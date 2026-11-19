@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentProofStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -16,12 +17,18 @@ class PaymentProof extends Model
         'mime',
         'size',
         'uploaded_by',
+        'status',
+        'verified_by',
+        'verified_at',
+        'rejection_reason',
     ];
 
     protected function casts(): array
     {
         return [
             'size' => 'integer',
+            'status' => PaymentProofStatus::class,
+            'verified_at' => 'datetime',
         ];
     }
 
@@ -33,6 +40,16 @@ class PaymentProof extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function verifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === PaymentProofStatus::Pending;
     }
 
     public function url(): string

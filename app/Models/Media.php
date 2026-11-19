@@ -29,6 +29,8 @@ class Media extends Model
         'mediable_id',
         'role',
         'color',
+        'color_id',
+        'is_color_primary',
         'disk',
         'path',
         'original_name',
@@ -48,6 +50,7 @@ class Media extends Model
             'width' => 'integer',
             'height' => 'integer',
             'is_primary' => 'boolean',
+            'is_color_primary' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
@@ -89,6 +92,22 @@ class Media extends Model
             ->orderByDesc('is_primary')
             ->orderBy('sort_order')
             ->orderBy('id');
+    }
+
+    /**
+     * Galeri satu warna: pakai color_id bila ada, jika tidak fallback ke label string lama.
+     */
+    public function scopeForColor(Builder $query, ?int $colorId, ?string $color): Builder
+    {
+        if ($colorId !== null) {
+            return $query->where('color_id', $colorId);
+        }
+
+        if ($color !== null && $color !== '') {
+            return $query->where('color', $color);
+        }
+
+        return $query->whereNull('color_id')->whereNull('color');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\StockMovementType;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,9 @@ class StockService
         ?string $note = null,
         ?string $refType = null,
         ?int $refId = null,
+        ?ProductVariant $variant = null,
+        ?string $color = null,
+        ?string $size = null,
     ): StockMovement {
         if ($qty === 0) {
             throw ValidationException::withMessages([
@@ -42,7 +46,7 @@ class StockService
             ]);
         }
 
-        return DB::transaction(function () use ($product, $qty, $type, $user, $note, $refType, $refId) {
+        return DB::transaction(function () use ($product, $qty, $type, $user, $note, $refType, $refId, $variant, $color, $size) {
             // Kunci baris produk agar dua perubahan stok tidak saling menimpa.
             $fresh = Product::query()->lockForUpdate()->findOrFail($product->id);
 
@@ -59,10 +63,31 @@ class StockService
                 ]);
             }
 
+            // Stok varian (warna + ukuran) diubah dalam transaksi yang sama.
+            if ($variant !== null) {
+                $lockedVariant = ProductVariant::query()->lockForUpdate()->findOrFail($variant->id);
+
+                if ($lockedVariant->stock + $qty < 0) {
+                    throw ValidationException::withMessages([
+                        'qty' => sprintf(
+                            'Stok varian %s tidak mencukupi. Tersedia %d, diminta %d.',
+                            $lockedVariant->label(),
+                            $lockedVariant->stock,
+                            abs($qty)
+                        ),
+                    ]);
+                }
+
+                $lockedVariant->increment('stock', $qty);
+            }
+
             $fresh->update(['stock' => $stockAfter]);
 
             return StockMovement::create([
                 'product_id' => $fresh->id,
+                'variant_id' => $variant?->id,
+                'color' => $color,
+                'size' => $size,
                 'type' => $type,
                 'qty' => $qty,
                 'stock_before' => $stockBefore,

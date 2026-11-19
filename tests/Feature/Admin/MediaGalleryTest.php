@@ -414,19 +414,19 @@ class MediaGalleryTest extends TestCase
         $this->assertSame(1, Media::query()->where('role', 'banner_promo')->count());
     }
 
-    public function test_owner_tidak_bisa_mengunggah_foto_produk(): void
+    public function test_owner_dapat_mengunggah_foto_produk(): void
     {
         $owner = User::factory()->owner()->create();
         $product = Product::factory()->create();
 
         $this->actingAs($owner)->post('/admin/produk/'.$product->id.'/foto', [
             'photos' => [$this->png('foto.png')],
-        ])->assertForbidden();
+        ])->assertSessionHas('success');
 
-        $this->assertSame(0, Media::count());
+        $this->assertSame(1, Media::count());
     }
 
-    public function test_owner_tidak_bisa_menghapus_foto_produk(): void
+    public function test_owner_dapat_menghapus_foto_produk(): void
     {
         $owner = User::factory()->owner()->create();
         $product = Product::factory()->create();
@@ -434,9 +434,9 @@ class MediaGalleryTest extends TestCase
 
         $media = Media::query()->firstOrFail();
 
-        $this->actingAs($owner)->delete('/admin/foto/'.$media->id)->assertForbidden();
+        $this->actingAs($owner)->delete('/admin/foto/'.$media->id)->assertRedirect();
 
-        $this->assertSame(1, Media::count());
+        $this->assertSame(0, Media::count());
     }
 
 

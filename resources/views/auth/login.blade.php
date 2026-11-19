@@ -444,7 +444,7 @@
                     <li><i class="bi bi-check2-circle"></i> Transaksi belanja aman & verifikasi pesanan terpercaya</li>
                 </ul>
                 <div class="mt-4 pt-3 border-top border-white border-opacity-10 small text-white text-opacity-50">
-                    &copy; {{ date('Y') }} {{ config('pos.store.name', 'Tabita Modiste') }}. All rights reserved.
+                    &copy; {{ date('Y') }} {{ store_profile()->name() }}. All rights reserved.
                 </div>
             </div>
         </div>

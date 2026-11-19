@@ -24,7 +24,8 @@
 
     <div class="alert alert-light border small">
         Estimasi bukan jaminan waktu sampai. Data berasal dari layanan pengiriman bila tersedia.
-        Halaman ini memperbarui status otomatis setiap 15 detik dari server.
+        Halaman ini memperbarui tampilan setiap 15 detik dari server; data pengiriman
+        disinkronkan dari Biteship setiap 5 menit bila ada scan baru.
     </div>
 
     @if ($shipment->isLive() && $shipment->live_tracking_url)

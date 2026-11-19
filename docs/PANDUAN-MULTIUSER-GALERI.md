@@ -84,7 +84,7 @@ cd "C:\Users\LENOVO\Documents\TOKO TABITA"
 & 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test
 ```
 
-Hasil terakhir: **178 test, 178 passed, 857 assertions**.
+Hasil terakhir: **179 test, 179 passed, 860 assertions**.
 
 Uji konkurensi HTTP sungguhan:
 

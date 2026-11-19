@@ -102,6 +102,10 @@ Semua marker otomatis `fitBounds`, jadi peta langsung fokus ke area pengiriman.
 > sistem mencari koordinatnya lewat Nominatim dan menyimpannya sebagai
 > `scan_geocoded`. Titik ini adalah **lokasi scan nyata**, bukan GPS kurir yang
 > bergerak terus. Marker tidak dianimasikan seolah-olah kurir berjalan.
+>
+> Scan baru diambil otomatis oleh `shipping:sync-tracking` tiap **5 menit**
+> (saat cron `schedule:run` aktif). Halaman tracking sendiri tetap me-refresh
+> tiap 15 detik untuk membaca perubahan dari server.
 
 ---
 

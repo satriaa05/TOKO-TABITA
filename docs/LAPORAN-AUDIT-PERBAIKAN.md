@@ -305,7 +305,7 @@ Tersimpan di `docs/screenshots/`:
 - Route `admin.audit-logs.index` didaftarkan dengan `permission:reports.view` (Owner bypass),
   tersedia di navigasi Admin & Owner.
 - Test baru: `PaymentStateMachineTest` (6) + `PermissionDefaultDenyTest` (4).
-  Total **178 test / 857 assertions**.
+  Total **179 test / 860 assertions**.
 
 ---
 

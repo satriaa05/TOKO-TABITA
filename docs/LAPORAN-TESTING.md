@@ -2,7 +2,7 @@
 
 > Tanggal: 18 November 2026  
 > Perintah (dengan GD): `& 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test` di **PowerShell** — PHP **8.5.12 + GD aktif**.  
-> Hasil terakhir (19 November 2026): **178 test · 178 passed · 0 skipped · 857 assertions**  
+> Hasil terakhir (19 November 2026): **179 test · 179 passed · 0 skipped · 860 assertions**  
 > (mencakup state machine pembayaran, default-deny permission, dan audit log)
 
 ---
@@ -11,7 +11,7 @@
 
 | Status | Jumlah | Keterangan |
 |---|---|---|
-| **PASS** | 178 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
+| **PASS** | 179 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
 | **FAIL** | 0 | Tidak ada test yang gagal |
 | **SKIPPED** | 0 | Tidak ada test yang diskip setelah GD diaktifkan |
 | **BLOCKED** | 6 skenario live | Butuh kredensial Midtrans/Biteship/Resend; peta gratis sudah aktif |
@@ -109,7 +109,7 @@ php artisan view:clear
 Ringkasan akhir akan muncul seperti:
 
 ```
-Tests: 178 passed (857 assertions)
+Tests: 179 passed (860 assertions)
 ```
 
 ---

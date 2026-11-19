@@ -10,4 +10,5 @@ Artisan::command('inspire', function () {
 
 // Webhook bisa gagal; sinkronisasi berkala menutup celah tersebut.
 Schedule::command('payments:sync-pending')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('shipping:sync-tracking')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('media:prune')->daily();

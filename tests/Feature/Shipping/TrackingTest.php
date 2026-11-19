@@ -205,6 +205,51 @@ class TrackingTest extends TestCase
         $this->assertNotNull($shipment->fresh()->last_scan_latitude);
     }
 
+    public function test_polling_scan_menambah_titik_peta(): void
+    {
+        config()->set('shipping.biteship.api_key', 'test-key');
+
+        Http::fake([
+            'https://api.biteship.com/v1/orders/*' => Http::response([
+                'id' => 'BS-POLL',
+                'status' => 'in_transit',
+                'courier' => [
+                    'waybill_id' => 'WYB-POLL',
+                    'history' => [[
+                        'status' => 'in_transit',
+                        'note' => 'Paket tiba di Pekalongan',
+                        'location' => 'Pekalongan',
+                        'updated_at' => '2026-11-19 22:30:00',
+                    ]],
+                ],
+            ], 200),
+            'https://nominatim.openstreetmap.org/search*' => Http::response([
+                ['lat' => '-6.8900', 'lon' => '109.6700'],
+            ], 200),
+        ]);
+
+        $sale = $this->makePaidSale();
+        $oldSync = now()->subHour();
+        $shipment = Shipment::create([
+            'sale_id' => $sale->id,
+            'courier' => 'jne',
+            'service' => 'REG',
+            'tracking_number' => 'WYB-POLL',
+            'biteship_order_id' => 'BS-POLL',
+            'biteship_tracking_id' => 'BS-POLL',
+            'shipment_status' => ShipmentStatus::InTransit->value,
+            'last_synced_at' => $oldSync,
+        ]);
+
+        $this->artisan('shipping:sync-tracking')->assertSuccessful();
+
+        $this->assertSame(1, ShipmentLocation::query()
+            ->where('shipment_id', $shipment->id)
+            ->where('source', 'scan_geocoded')
+            ->count());
+        $this->assertTrue($shipment->fresh()->last_synced_at->greaterThan($oldSync));
+    }
+
     public function test_webhook_biteship_signature_invalid_ditolak(): void
     {
         $this->postJson('/shipping/biteship/webhook', ['event' => 'order.status'], [

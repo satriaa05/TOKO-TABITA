@@ -170,8 +170,11 @@ chmod -R 775 storage bootstrap/cache
 # Migrasi (hanya menambah tabel/kolom, aman)
 php artisan migrate --force
 
-# HANYA seeder metode pembayaran
+# Seeder esensial (WAJIB): metode pembayaran + permission Admin
 php artisan db:seed --class=PaymentChannelSeeder --force
+php artisan db:seed --class=PermissionSeeder --force
+
+# Jangan jalankan DatabaseSeeder di produksi: itu akun & produk demo.
 
 # Symlink storage agar gambar produk/bukti bisa diakses
 php artisan storage:link

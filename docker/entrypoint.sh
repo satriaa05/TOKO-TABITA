@@ -18,9 +18,14 @@ php artisan storage:link || true
 php artisan config:cache
 php artisan view:clear
 
-# Seed data demo (idempotent — updateOrCreate) supaya toko langsung terisi.
+# Data esensial WAJIB ada di produksi (metode bayar + permission).
+# Idempoten, aman dijalankan setiap deploy.
+php artisan db:seed --class=PaymentChannelSeeder --force
+php artisan db:seed --class=PermissionSeeder --force
+
+# Seed data demo (produk/akun contoh) hanya bila SEED_DEMO=true.
 if [ "${SEED_DEMO:-false}" = "true" ]; then
-    php artisan db:seed --force
+    php artisan db:seed --class=DatabaseSeeder --force
 fi
 
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

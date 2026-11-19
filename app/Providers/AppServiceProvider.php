@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Services\StoreProfile;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,5 +41,24 @@ class AppServiceProvider extends ServiceProvider
             'product' => Product::class,
             'category' => Category::class,
         ]);
+
+        /*
+         * Saat diakses lewat tunnel HTTPS, request yang diterima PHP artisan
+         * serve tetap ber-scheme http. Paksa https supaya CSS/JS/gambar tidak
+         * diblokir browser sebagai mixed content.
+         */
+        if (! $this->app->runningInConsole() && $request = request()) {
+            $forwarded = strtolower((string) $request->header('X-Forwarded-Proto', ''));
+            $isTunnel = str_contains($request->getHost(), 'trycloudflare.com');
+
+            if (env('APP_FORCE_HTTPS', false) || $forwarded === 'https' || $isTunnel) {
+                URL::forceScheme('https');
+            }
+
+            // Storage::url() harus mengikuti host/scheme yang dipakai pembeli.
+            config([
+                'filesystems.disks.public.url' => rtrim(URL::to('/'), '/').'/storage',
+            ]);
+        }
     }
 }

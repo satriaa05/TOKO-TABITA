@@ -198,7 +198,7 @@ tests/Feature/... (lihat daftar di bagian 4)
 cd "C:\Users\LENOVO\Documents\TOKO TABITA"
 php -v                       # harus 8.5.x
 npm run build                # sudah pernah dijalankan; public/build ada
-php artisan test             # 177 passed, 851 assertions
+php artisan test             # 178 passed, 857 assertions
 php artisan view:clear
 php artisan serve
 npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhook
@@ -260,5 +260,5 @@ npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhoo
 - Scheduler `payments:sync-pending` menutup celah webhook yang tidak sampai.
 - Permission default-deny; Admin tanpa `role_permissions` tidak mendapat akses.
 - Jejak Audit tersedia di `/admin/audit-log` untuk Admin & Owner.
-- Test: **177 passed / 851 assertions**.
+- Test: **178 passed / 857 assertions**.
 

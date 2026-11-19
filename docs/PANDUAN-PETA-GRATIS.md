@@ -91,12 +91,17 @@ Kalau OSRM gagal, sistem otomatis memakai **garis lurus** antara dua titik. Jadi
 
 - 🔴 titik **asal** (lokasi toko)
 - 🔵 titik **tujuan** (alamat pembeli)
-- 🟣 titik **scan** dari event Biteship yang punyi koordinat
+- 🟣 titik **scan** dari event Biteship (koordinat asli, atau nama kota yang di-geocode)
 - 🟢 titik **scan terakhir**
 - garis **perkiraan rute**
 - atribusi: `Leaflet | © OpenStreetMap contributors`
 
 Semua marker otomatis `fitBounds`, jadi peta langsung fokus ke area pengiriman.
+
+> Kalau Biteship mengirim **nama kota** (misal `Pekalongan`) tanpa koordinat,
+> sistem mencari koordinatnya lewat Nominatim dan menyimpannya sebagai
+> `scan_geocoded`. Titik ini adalah **lokasi scan nyata**, bukan GPS kurir yang
+> bergerak terus. Marker tidak dianimasikan seolah-olah kurir berjalan.
 
 ---
 
@@ -125,7 +130,7 @@ Peta langsung tampil tanpa pengaturan tambahan.
 | Nominatim | Gratis, tapi punya aturan pemakaian wajar. Karena itu hasil di-cache 24 jam. |
 | OSRM demo | Cocok untuk volume rendah/sedang. Untuk volume tinggi sebaiknya pakai layanan routing berbayar atau self-host. |
 | Kode pos salah | Biteship/Nominatim bisa salah membaca kode pos. Sistem menampilkan peringatan di checkout. |
-| Titik scan kosong | Kalau ekspedisi tidak mengirim koordinat, Admin bisa mengisi manual di **Pengiriman → Perbarui Status Manual**. |
+| Titik scan kosong | Kalau ekspedisi tidak mengirim koordinat **dan tidak ada nama kota**, Admin bisa mengisi manual di **Pengiriman → Perbarui Status Manual**. |
 
 ---
 

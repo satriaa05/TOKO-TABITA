@@ -327,21 +327,72 @@ class BiteshipService
                 continue;
             }
 
-            ShipmentTrackingEvent::firstOrCreate(
+            $eventTime = $this->parseDate($event['updated_at'] ?? null) ?? now();
+            $location = isset($event['location']) ? trim((string) $event['location']) : '';
+            $latitude = $this->validLat($event['latitude'] ?? null);
+            $longitude = $this->validLng($event['longitude'] ?? null);
+            $locationSource = $latitude !== null && $longitude !== null ? 'provider_scan' : null;
+
+            // Biteship reguler sering mengirim nama kota tanpa koordinat.
+            // Geocode nama scan tersebut dengan Nominatim agar peta menunjukkan
+            // titik scan nyata. Ini BUKAN GPS kurir live.
+            if (($latitude === null || $longitude === null) && $location !== '') {
+                $geo = $this->maps->geocode($location.', Indonesia');
+
+                if ($geo !== null) {
+                    $latitude = $geo['lat'];
+                    $longitude = $geo['lng'];
+                    $locationSource = 'scan_geocoded';
+                }
+            }
+
+            ShipmentTrackingEvent::updateOrCreate(
                 [
                     'shipment_id' => $shipment->id,
                     'raw_status' => (string) $event['status'],
-                    'event_time' => $this->parseDate($event['updated_at'] ?? null) ?? now(),
+                    'event_time' => $eventTime,
                     'source' => 'provider',
                 ],
                 [
                     'normalized_status' => ShipmentStatus::fromBiteship((string) $event['status'])->value,
                     'description' => $event['note'] ?? null,
-                    'location' => $event['location'] ?? null,
-                    'latitude' => $this->validLat($event['latitude'] ?? null),
-                    'longitude' => $this->validLng($event['longitude'] ?? null),
+                    'location' => $location !== '' ? $location : null,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
                 ]
             );
+
+            if ($latitude !== null && $longitude !== null && $locationSource !== null) {
+                ShipmentLocation::firstOrCreate(
+                    [
+                        'shipment_id' => $shipment->id,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'recorded_at' => $eventTime,
+                    ],
+                    [
+                        'location_description' => $location !== '' ? $location : 'Titik scan pengiriman',
+                        'source' => $locationSource,
+                    ]
+                );
+            }
+        }
+
+        // Posisi "scan terakhir" mengikuti event terakhir yang punya koordinat.
+        $lastLocated = ShipmentTrackingEvent::query()
+            ->where('shipment_id', $shipment->id)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->latest('event_time')
+            ->latest('id')
+            ->first();
+
+        if ($lastLocated !== null) {
+            $shipment->update([
+                'last_scan_latitude' => $lastLocated->latitude,
+                'last_scan_longitude' => $lastLocated->longitude,
+                'last_scan_location' => $lastLocated->location ?: ($lastLocated->description ?: $shipment->last_scan_location),
+            ]);
         }
 
         $this->saveCoordinates($shipment, $json);

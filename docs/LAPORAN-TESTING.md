@@ -2,7 +2,7 @@
 
 > Tanggal: 18 November 2026  
 > Perintah (dengan GD): `& 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test` di **PowerShell** — PHP **8.5.12 + GD aktif**.  
-> Hasil terakhir (19 November 2026): **177 test · 177 passed · 0 skipped · 851 assertions**  
+> Hasil terakhir (19 November 2026): **178 test · 178 passed · 0 skipped · 857 assertions**  
 > (mencakup state machine pembayaran, default-deny permission, dan audit log)
 
 ---
@@ -11,7 +11,7 @@
 
 | Status | Jumlah | Keterangan |
 |---|---|---|
-| **PASS** | 177 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
+| **PASS** | 178 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
 | **FAIL** | 0 | Tidak ada test yang gagal |
 | **SKIPPED** | 0 | Tidak ada test yang diskip setelah GD diaktifkan |
 | **BLOCKED** | 6 skenario live | Butuh kredensial Midtrans/Biteship/Resend; peta gratis sudah aktif |
@@ -109,7 +109,7 @@ php artisan view:clear
 Ringkasan akhir akan muncul seperti:
 
 ```
-Tests: 177 passed (851 assertions)
+Tests: 178 passed (857 assertions)
 ```
 
 ---
@@ -201,6 +201,7 @@ stok tidak cukup. Tidak ada HTTP 500, invoice tidak duplikat, stok tidak minus. 
 | Scheduler `payments:sync-pending` tiap 10 menit | **PASS** | `routes/console.php`, `app/Console/Commands/SyncPendingPayments.php` |
 | Permission default-deny saat `role_permissions` kosong | **PASS** | `PermissionDefaultDenyTest` (4 test) |
 | Halaman Jejak Audit bisa dibuka Admin & Owner | **PASS** | `PermissionDefaultDenyTest`, `RouteHealthMatrixTest` |
+| Scan berupa nama kota tanpa koordinat di-geocode ke peta | **PASS** | `TrackingTest::test_scan_nama_kota_tanpa_koordinat_digeocode_ke_peta` |
 
 > **Tindakan user:** token webhook Biteship sudah berubah. Buka `.env`, ambil nilai
 > `BITESHIP_WEBHOOK_TOKEN`, lalu update header secret di dashboard Biteship.

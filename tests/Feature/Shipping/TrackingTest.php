@@ -10,9 +10,12 @@ use App\Enums\UserRole;
 use App\Models\CustomerNotification;
 use App\Models\Sale;
 use App\Models\Shipment;
+use App\Models\ShipmentLocation;
 use App\Models\ShipmentTrackingEvent;
 use App\Models\User;
+use App\Services\BiteshipService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -144,6 +147,62 @@ class TrackingTest extends TestCase
         ]);
 
         $this->actingAs($other)->get(route('store.orders.tracking.partial', $sale))->assertForbidden();
+    }
+
+    public function test_scan_nama_kota_tanpa_koordinat_digeocode_ke_peta(): void
+    {
+        config()->set('shipping.biteship.api_key', 'test-key');
+
+        Http::fake([
+            'https://api.biteship.com/v1/orders/*' => Http::response([
+                'id' => 'BS-1',
+                'status' => 'in_transit',
+                'courier' => [
+                    'waybill_id' => 'WYB-GEO',
+                    'history' => [
+                        [
+                            'status' => 'in_transit',
+                            'note' => 'Item is on the way to destination',
+                            'location' => 'Pekalongan',
+                            'updated_at' => '2026-11-19 21:46:00',
+                        ],
+                    ],
+                ],
+            ], 200),
+            'https://nominatim.openstreetmap.org/search*' => Http::response([
+                ['lat' => '-6.8900', 'lon' => '109.6700', 'display_name' => 'Pekalongan, Jawa Tengah, Indonesia'],
+            ], 200),
+        ]);
+
+        $sale = $this->makePaidSale();
+        $shipment = Shipment::create([
+            'sale_id' => $sale->id,
+            'courier' => 'jne',
+            'service' => 'REG',
+            'tracking_number' => 'WYB-GEO',
+            'biteship_order_id' => 'BS-1',
+            'biteship_tracking_id' => 'BS-1',
+            'shipment_status' => ShipmentStatus::Pending->value,
+        ]);
+
+        $result = app(BiteshipService::class)->sync($shipment);
+
+        $this->assertTrue($result['ok']);
+        $event = ShipmentTrackingEvent::query()
+            ->where('shipment_id', $shipment->id)
+            ->where('raw_status', 'in_transit')
+            ->firstOrFail();
+        $this->assertSame(-6.89, round((float) $event->latitude, 4));
+        $this->assertSame(109.67, round((float) $event->longitude, 4));
+
+        $this->assertSame(1, ShipmentLocation::query()
+            ->where('shipment_id', $shipment->id)
+            ->where('source', 'scan_geocoded')
+            ->where('location_description', 'Pekalongan')
+            ->count());
+
+        $this->assertSame('Pekalongan', $shipment->fresh()->last_scan_location);
+        $this->assertNotNull($shipment->fresh()->last_scan_latitude);
     }
 
     public function test_webhook_biteship_signature_invalid_ditolak(): void

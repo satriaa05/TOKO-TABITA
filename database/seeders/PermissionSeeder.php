@@ -15,6 +15,7 @@ class PermissionSeeder extends Seeder
         'products.manage' => ['Kelola Produk', 'Menambah, mengubah, dan menghapus produk'],
         'categories.manage' => ['Kelola Kategori', 'Menambah, mengubah, dan menghapus kategori'],
         'media.manage' => ['Kelola Media Toko', 'Mengatur banner, logo, dan foto toko'],
+        'promotions.manage' => ['Kelola Promo', 'Membuat dan mengubah promo otomatis produk'],
         'reports.view' => ['Lihat Laporan', 'Melihat laporan penjualan dan monitoring'],
         'users.manage' => ['Kelola Akun', 'Menambah, mengubah, dan menonaktifkan akun Admin'],
         'settings.manage' => ['Pengaturan Sistem', 'Mengatur identitas dan konfigurasi toko'],
@@ -23,6 +24,7 @@ class PermissionSeeder extends Seeder
     private const ADMIN = [
         'orders.view', 'orders.manage', 'payments.verify', 'shipments.manage',
         'products.manage', 'categories.manage', 'media.manage', 'reports.view',
+        'promotions.manage',
     ];
 
     public function run(): void

@@ -10,7 +10,10 @@ namespace App\Services;
  */
 class ShippingService
 {
-    public function __construct(private readonly BiteshipService $biteship) {}
+    public function __construct(
+        private readonly BiteshipService $biteship,
+        private readonly StoreProfile $profile,
+    ) {}
 
     /**
      * Hitung ongkir: memakai tarif real-time Biteship bila tersedia,
@@ -37,7 +40,7 @@ class ShippingService
             'is_free' => $base['is_free'],
             'threshold' => $base['threshold'],
             'shortfall' => $base['shortfall'],
-            'eta' => null,
+            'eta' => $this->profile->shippingEta($zone, $service),
             'source' => 'manual',
             'courier' => $courier,
             'service' => $service,
@@ -52,14 +55,16 @@ class ShippingService
                 if (strtolower((string) $rate['courier']) === strtolower((string) $courier)
                     && strtolower((string) $rate['service']) === strtolower((string) $service)) {
                     $result['cost'] = (float) $rate['price'];
-                    $result['eta'] = $rate['etd'];
+                    $result['eta'] = str_contains(strtolower((string) $service), 'instant')
+                        ? $this->profile->shippingInstantEta()
+                        : ((string) ($rate['etd'] ?? '') !== '' ? (string) $rate['etd'] : $result['eta']);
                     $result['source'] = 'biteship';
                     break;
                 }
             }
         }
 
-        $maxCost = (float) config('pos.shipping.max_cost', 17000);
+        $maxCost = $this->profile->shippingMaxCost();
 
         if ($result['cost'] > $maxCost) {
             $result['cost'] = $maxCost;
@@ -90,10 +95,9 @@ class ShippingService
      */
     public function calculate(?string $zone, float $orderTotal): array
     {
-        $config = config('pos.shipping', []);
-        $zones = (array) ($config['zones'] ?? []);
-        $default = (float) ($config['default'] ?? 0);
-        $freeThreshold = (float) ($config['free_threshold'] ?? 0);
+        $zones = $this->profile->shippingCosts();
+        $default = $this->profile->shippingDefaultCost();
+        $freeThreshold = $this->profile->shippingFreeThreshold();
 
         $zoneKey = $zone !== null && array_key_exists($zone, $zones)
             ? $zone
@@ -112,6 +116,7 @@ class ShippingService
             'is_free' => $isFree,
             'threshold' => $freeThreshold,
             'shortfall' => $isFree ? 0.0 : round(max(0, $freeThreshold - $orderTotal), 2),
+            'eta' => $this->profile->shippingEta($zoneKey, null),
         ];
     }
 

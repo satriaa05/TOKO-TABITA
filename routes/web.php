@@ -196,6 +196,18 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('produk/{product}/foto', [MediaController::class, 'storeProductPhotos'])->name('products.photos.store');
         });
 
+    Route::middleware(['role:admin,owner', 'permission:promotions.manage'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('promo', [PromotionController::class, 'index'])->name('promotions.index');
+            Route::get('promo/tambah', [PromotionController::class, 'create'])->name('promotions.create');
+            Route::post('promo', [PromotionController::class, 'store'])->name('promotions.store');
+            Route::get('promo/{promotion}/edit', [PromotionController::class, 'edit'])->name('promotions.edit');
+            Route::put('promo/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
+            Route::patch('promo/{promotion}/status', [PromotionController::class, 'toggleStatus'])->name('promotions.toggle');
+        });
+
     /*
     |----------------------------------------------------------------------
     | ADMIN - Konfigurasi & operasional toko baju
@@ -254,17 +266,6 @@ Route::middleware(['auth', 'active'])->group(function () {
             |------------------------------------------------------------------*/
             Route::post('kategori/{category}/foto', [MediaController::class, 'storeCategoryPhoto'])
                 ->middleware('permission:categories.manage')->name('categories.photo.store');
-
-            /*------------------------------------------------------------------
-            | Promo
-            |------------------------------------------------------------------*/
-            Route::get('promo', [PromotionController::class, 'index'])->name('promotions.index');
-            Route::get('promo/tambah', [PromotionController::class, 'create'])->name('promotions.create');
-            Route::post('promo', [PromotionController::class, 'store'])->name('promotions.store');
-            Route::get('promo/{promotion}/edit', [PromotionController::class, 'edit'])->name('promotions.edit');
-            Route::put('promo/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
-            Route::patch('promo/{promotion}/status', [PromotionController::class, 'toggleStatus'])
-                ->name('promotions.toggle');
         });
 
     /*

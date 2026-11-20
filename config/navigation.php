@@ -46,6 +46,10 @@ return [
             'route' => 'admin.products.index',
         ],
         [
+            'type' => 'item', 'label' => 'Promo', 'icon' => 'bi-ticket-perforated',
+            'route' => 'admin.promotions.index',
+        ],
+        [
             'type' => 'item', 'label' => 'Kategori', 'icon' => 'bi-tags',
             'route' => 'admin.categories.index',
         ],
@@ -129,6 +133,10 @@ return [
         [
             'type' => 'item', 'label' => 'Kelola Produk', 'icon' => 'bi-box-seam',
             'route' => 'admin.products.index',
+        ],
+        [
+            'type' => 'item', 'label' => 'Promo', 'icon' => 'bi-ticket-perforated',
+            'route' => 'admin.promotions.index',
         ],
         [
             'type' => 'item', 'label' => 'Lihat Katalog Toko', 'icon' => 'bi-shop',

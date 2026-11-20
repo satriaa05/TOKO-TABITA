@@ -44,6 +44,12 @@ class StoreSettingController extends Controller
         'about_closure',
         'about_features_title',
         'about_features',
+        'shipping_default_cost',
+        'shipping_max_cost',
+        'shipping_free_threshold',
+        'shipping_zones',
+        'shipping_eta_zones',
+        'shipping_eta_instant',
         'payment_methods',
     ];
 
@@ -89,6 +95,12 @@ class StoreSettingController extends Controller
             'about_closure' => ['nullable', 'string', 'max:1000'],
             'about_features_title' => ['nullable', 'string', 'max:150'],
             'about_features' => ['nullable', 'string', 'max:3000'],
+            'shipping_default_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'shipping_max_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'shipping_free_threshold' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'shipping_zones' => ['nullable', 'string', 'max:3000'],
+            'shipping_eta_zones' => ['nullable', 'string', 'max:3000'],
+            'shipping_eta_instant' => ['nullable', 'string', 'max:30'],
             'payment_methods' => ['required', 'array', 'min:1'],
             'payment_methods.*' => ['string', Rule::in($catalogKeys)],
             'payment_logos' => ['nullable', 'array'],
@@ -100,6 +112,14 @@ class StoreSettingController extends Controller
             'payment_methods.required' => 'Pilih minimal satu metode pembayaran yang benar-benar didukung toko.',
             'payment_methods.min' => 'Pilih minimal satu metode pembayaran yang benar-benar didukung toko.',
         ]);
+
+        foreach (['shipping_zones', 'shipping_eta_zones'] as $jsonKey) {
+            if (! empty($data[$jsonKey]) && ! is_array(json_decode($data[$jsonKey], true))) {
+                throw ValidationException::withMessages([
+                    $jsonKey => 'Format JSON tidak valid.',
+                ]);
+            }
+        }
 
         // Nomor harus bisa dinormalisasi ke format wa.me (62 + 8..13 digit).
         if (StoreProfile::normalizeWhatsApp($data['store_whatsapp']) === null) {

@@ -53,7 +53,19 @@
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="text-center font-money">{{ rupiah($item['price']) }}</td>
+                                            @php
+                                                $rowPromo = $promo['items'][$loop->index] ?? null;
+                                                $lineDiscount = (float) ($rowPromo['discount'] ?? 0);
+                                                $unitPrice = (float) $item['price'] - ($lineDiscount / max(1, (int) $item['qty']));
+                                            @endphp
+                                            <td class="text-center">
+                                                @if ($lineDiscount > 0)
+                                                    <div class="st-price-old">{{ rupiah($item['price']) }}</div>
+                                                    <span class="font-money text-success">{{ rupiah($unitPrice) }}</span>
+                                                @else
+                                                    <span class="font-money">{{ rupiah($item['price']) }}</span>
+                                                @endif
+                                            </td>
                                             <td class="text-center">
                                                 <form method="POST" action="{{ route('store.cart.update', $item['key']) }}"
                                                       class="d-flex align-items-center justify-content-center gap-2">
@@ -67,7 +79,14 @@
                                                     </button>
                                                 </form>
                                             </td>
-                                            <td class="text-center font-money">{{ rupiah($item['subtotal']) }}</td>
+                                            <td class="text-center">
+                                                @if ($lineDiscount > 0)
+                                                    <div class="st-price-old">{{ rupiah($item['subtotal']) }}</div>
+                                                    <span class="font-money text-success">{{ rupiah($item['subtotal'] - $lineDiscount) }}</span>
+                                                @else
+                                                    <span class="font-money">{{ rupiah($item['subtotal']) }}</span>
+                                                @endif
+                                            </td>
                                             <td class="text-end">
                                                 <form method="POST" action="{{ route('store.cart.remove', $item['key']) }}">
                                                     @csrf

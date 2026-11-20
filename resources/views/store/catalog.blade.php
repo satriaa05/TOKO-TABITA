@@ -111,7 +111,7 @@
                                 <div class="fw-semibold mt-1" style="font-size:.88rem; line-height:1.3; min-height: 2.3em;">
                                     <a href="{{ route('store.product', $product) }}" class="text-decoration-none" style="color: var(--ink);">{{ $product->name }}</a>
                                 </div>
-                                <div class="st-price mt-1">{{ rupiah($product->sale_price) }}</div>
+                                <div class="mt-1">@include('store.partials.price', ['product' => $product, 'promoPrice' => $priceMap[$product->id] ?? null])</div>
                                 <div class="small {{ $product->stock > 0 ? 'text-muted-2' : 'text-danger' }}">
                                     @if ($product->stock > 0) Stok: {{ $product->stock }} @else Stok habis @endif
                                 </div>

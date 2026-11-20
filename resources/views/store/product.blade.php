@@ -120,7 +120,15 @@
                 <h1 class="st-section" style="font-size: 1.6rem;">{{ $product->name }}</h1>
                 <p class="small text-muted-2">Kode: {{ $product->barcode }} · Kategori: {{ $product->category?->name ?? '-' }}</p>
 
-                <div class="st-price-lg mb-2">{{ rupiah($product->sale_price) }}</div>
+                @if (is_array($promoPrice) && ($promoPrice['discount'] ?? 0) > 0)
+                    <div class="mb-2 d-flex align-items-baseline flex-wrap gap-2">
+                        <span class="st-price-old" style="font-size:1rem;">{{ rupiah($promoPrice['original']) }}</span>
+                        <span class="st-price-lg mb-0">{{ rupiah($promoPrice['price']) }}</span>
+                        <span class="st-promo-badge" title="{{ $promoPrice['promotion'] }}">Promo</span>
+                    </div>
+                @else
+                    <div class="st-price-lg mb-2">{{ rupiah($product->sale_price) }}</div>
+                @endif
                 <p class="small mb-2" id="variant-stock">
                     @if ($variantData !== [])
                         <span class="badge text-bg-success">Pilih warna &amp; ukuran untuk melihat stok</span>
@@ -227,7 +235,12 @@
                 </form>
 
                 @if ($waNumber)
-                    @php($msg = "Halo, saya ingin memesan: ".$product->name." (Kode: ".$product->barcode.") Harga: ".rupiah($product->sale_price)."\nTerima kasih.")
+                    @php
+                        $effectivePrice = is_array($promoPrice) && ($promoPrice['discount'] ?? 0) > 0
+                            ? (float) $promoPrice['price']
+                            : (float) $product->sale_price;
+                        $msg = "Halo, saya ingin memesan: ".$product->name." (Kode: ".$product->barcode.") Harga: ".rupiah($effectivePrice)."\nTerima kasih.";
+                    @endphp
                     <a href="https://wa.me/{{ $waNumber }}?text={{ rawurlencode($msg) }}" target="_blank" rel="noopener noreferrer" class="st-btn w-100 mt-2 justify-content-center" style="background:#128C7E; color:#fff;">
                         <i class="bi bi-whatsapp" aria-hidden="true"></i> Tanya / Pesan via WhatsApp
                     </a>

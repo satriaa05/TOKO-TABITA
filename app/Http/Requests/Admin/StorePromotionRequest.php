@@ -10,7 +10,7 @@ class StorePromotionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isAdmin() === true;
+        return $this->user()?->isAdmin() === true || $this->user()?->isOwner() === true;
     }
 
     /**

@@ -198,7 +198,7 @@ tests/Feature/... (lihat daftar di bagian 4)
 cd "C:\Users\LENOVO\Documents\TOKO TABITA"
 php -v                       # harus 8.5.x
 npm run build                # sudah pernah dijalankan; public/build ada
-php artisan test             # 179 passed, 860 assertions
+php artisan test             # 184 passed, 888 assertions
 php artisan view:clear
 php artisan serve
 npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhook
@@ -260,5 +260,17 @@ npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhoo
 - Scheduler `payments:sync-pending` menutup celah webhook yang tidak sampai.
 - Permission default-deny; Admin tanpa `role_permissions` tidak mendapat akses.
 - Jejak Audit tersedia di `/admin/audit-log` untuk Admin & Owner.
-- Test: **179 passed / 860 assertions**.
+- Test: **184 passed / 888 assertions**.
+
+---
+
+## 14. Ongkir otomatis & promo (20 Nov 2026)
+
+- Checkout tidak lagi menampilkan tombol **Cek Ongkir** dan teks tarifnya; ongkir tetap dihitung server.
+- Owner bisa mengatur ongkir default, batas maksimal, ambang gratis, tarif per zona,
+  estimasi per zona, dan estimasi instan di **Pengaturan Bisnis**.
+- Estimasi tampil untuk semua pengiriman; Grab Instan memakai format jam (`1-3 jam`).
+- Promo bisa dibuat Admin **dan** Owner; otomatis aktif sesuai tanggal.
+- Harga lama dicoret dan diganti harga promo di katalog, detail, wishlist, keranjang, checkout.
+- Screenshot: `docs/screenshots/promo-coret-harga.png`.
 

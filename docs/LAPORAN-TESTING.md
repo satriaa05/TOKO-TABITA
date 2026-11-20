@@ -2,7 +2,7 @@
 
 > Tanggal: 18 November 2026  
 > Perintah (dengan GD): `& 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test` di **PowerShell** — PHP **8.5.12 + GD aktif**.  
-> Hasil terakhir (19 November 2026): **179 test · 179 passed · 0 skipped · 860 assertions**  
+> Hasil terakhir (19 November 2026): **184 test · 184 passed · 0 skipped · 888 assertions**  
 > (mencakup state machine pembayaran, default-deny permission, dan audit log)
 
 ---
@@ -11,7 +11,7 @@
 
 | Status | Jumlah | Keterangan |
 |---|---|---|
-| **PASS** | 179 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
+| **PASS** | 184 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
 | **FAIL** | 0 | Tidak ada test yang gagal |
 | **SKIPPED** | 0 | Tidak ada test yang diskip setelah GD diaktifkan |
 | **BLOCKED** | 6 skenario live | Butuh kredensial Midtrans/Biteship/Resend; peta gratis sudah aktif |
@@ -109,7 +109,7 @@ php artisan view:clear
 Ringkasan akhir akan muncul seperti:
 
 ```
-Tests: 179 passed (860 assertions)
+Tests: 184 passed (888 assertions)
 ```
 
 ---
@@ -206,4 +206,21 @@ stok tidak cukup. Tidak ada HTTP 500, invoice tidak duplikat, stok tidak minus. 
 > **Tindakan user:** token webhook Biteship sudah berubah. Buka `.env`, ambil nilai
 > `BITESHIP_WEBHOOK_TOKEN`, lalu update header secret di dashboard Biteship.
 > Jangan menempelkan token tersebut ke chat atau commit.
+
+---
+
+## 11. Ongkir otomatis & promo Owner/Admin (20 November 2026) — PASS
+
+| Perubahan | Status | Bukti |
+|---|---|---|
+| UI "Cek ongkir real-time" + teks di bawahnya dihapus dari checkout | **PASS** | `ShippingSettingsTest::test_checkout_tidak_menampilkan_cek_ongkir_tapi_menampilkan_estimasi` |
+| Ongkir, batas maksimal, ambang gratis, tarif per zona bisa diatur Owner | **PASS** | `ShippingSettingsTest::test_owner_bisa_mengatur_ongkir_dan_estimasi_dipakai_saat_quote` |
+| Estimasi tampil untuk semua pengiriman; instant memakai format jam (`1-3 jam`) | **PASS** | `ShippingSettingsTest`, `RatesTest` |
+| Owner & Admin bisa CRUD promo otomatis | **PASS** | `PromotionTest` (3 test) |
+| Harga lama dicoret, harga promo tampil di katalog/detail/cart/checkout | **PASS** | `PromotionTest`, screenshot `docs/screenshots/promo-coret-harga.png` |
+
+Endpoint `/ongkir/cek` sengaja dipertahankan untuk kebutuhan server/internal & test lama,
+tetapi tidak lagi ditampilkan ke pembeli di checkout.
+
+> QRIS live tetap **BLOCKED** sampai kredensial Midtrans diisi.
 

@@ -289,6 +289,55 @@
             </div>
         </div>
 
+        {{-- Ongkir & estimasi --}}
+        <div class="card mt-3">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-truck" aria-hidden="true"></i> Ongkir &amp; Estimasi Pengiriman
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label for="shipping_default_cost" class="form-label small">Ongkir default (Rp)</label>
+                        <input type="number" min="0" class="form-control form-control-sm" id="shipping_default_cost"
+                               name="shipping_default_cost"
+                               value="{{ old('shipping_default_cost', $profile->shippingDefaultCost()) }}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="shipping_max_cost" class="form-label small">Ongkir maksimal (Rp)</label>
+                        <input type="number" min="0" class="form-control form-control-sm" id="shipping_max_cost"
+                               name="shipping_max_cost"
+                               value="{{ old('shipping_max_cost', $profile->shippingMaxCost()) }}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="shipping_free_threshold" class="form-label small">Gratis ongkir minimal (Rp)</label>
+                        <input type="number" min="0" class="form-control form-control-sm" id="shipping_free_threshold"
+                               name="shipping_free_threshold"
+                               value="{{ old('shipping_free_threshold', $profile->shippingFreeThreshold()) }}">
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label for="shipping_zones" class="form-label small">Tarif per wilayah (JSON)</label>
+                    <textarea class="form-control form-control-sm" id="shipping_zones" name="shipping_zones" rows="4">{{ old('shipping_zones', json_encode($profile->shippingCosts())) }}</textarea>
+                    <div class="form-text">Contoh: <code>{"jakarta":15000,"jawa_tengah":17000}</code></div>
+                </div>
+
+                <div class="mt-3">
+                    <label for="shipping_eta_zones" class="form-label small">Estimasi per wilayah (JSON)</label>
+                    <textarea class="form-control form-control-sm" id="shipping_eta_zones" name="shipping_eta_zones" rows="4">{{ old('shipping_eta_zones', json_encode($profile->shippingEtaZones())) }}</textarea>
+                    <div class="form-text">Contoh: <code>{"jakarta":"1-2 hari","luar_jawa":"5-7 hari"}</code></div>
+                </div>
+
+                <div class="mt-3">
+                    <label for="shipping_eta_instant" class="form-label small">Estimasi layanan Instan</label>
+                    <input type="text" class="form-control form-control-sm" id="shipping_eta_instant"
+                           name="shipping_eta_instant" maxlength="30"
+                           value="{{ old('shipping_eta_instant', $profile->shippingInstantEta()) }}">
+                    <div class="form-text">Bentuk umum e-commerce: <code>1-3 jam</code>. Berlaku untuk Grab Instan &amp; layanan instant lainnya.</div>
+                </div>
+            </div>
+        </div>
+
         <div class="d-flex flex-wrap gap-2 mt-3">
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-save"></i> Simpan Pengaturan

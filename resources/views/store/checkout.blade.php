@@ -145,26 +145,11 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <div class="border rounded p-3 bg-light">
-                                    <label for="rates_postal" class="form-label small fw-bold mb-1">
-                                        Cek ongkir real-time dari ekspedisi
-                                    </label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="text" class="form-control" id="rates_postal"
-                                               maxlength="15" placeholder="Kode pos tujuan, mis. 50111"
-                                               value="{{ old('postal_code', $addresses->first()?->postal_code) }}">
-                                        <button type="button" class="btn btn-outline-primary" id="rates-check">Cek Ongkir</button>
-                                    </div>
-                                    <div id="rates-feedback" class="small mt-2"></div>
-                                    <div id="rates-result" class="mt-2"></div>
-                                </div>
-                            </div>
-                            <div class="col-12">
                                 <div class="alert alert-light border small mb-0" id="shipping-note">
-                                    Ongkir dihitung server, <strong>maksimal {{ rupiah(config('pos.shipping.max_cost', 17000)) }}</strong>
-                                    (selisih tarif ekspedisi ditanggung toko) dan <strong>gratis</strong> untuk belanja minimal
-                                    {{ rupiah(config('pos.shipping.free_threshold', 300000)) }}.
-                                    Klik "Cek Ongkir" untuk melihat tarif & estimasi dari ekspedisi.
+                                    Ongkir dihitung otomatis di server, <strong>maksimal {{ rupiah(store_profile()->shippingMaxCost()) }}</strong>
+                                    dan <strong>gratis</strong> untuk belanja minimal
+                                    {{ rupiah(store_profile()->shippingFreeThreshold()) }}.
+                                    Estimasi pengiriman mengikuti wilayah tujuan; layanan instan memakai estimasi jam.
                                 </div>
                             </div>
                         </div>
@@ -206,7 +191,11 @@
                         <div class="card-body">
                             <div class="st-summary-items">
                                 @foreach ($items as $item)
-                                    @php($checkoutPhoto = $item['product']->displayPhoto($item['color'] ?? null))
+                                    @php
+                                        $checkoutPhoto = $item['product']->displayPhoto($item['color'] ?? null);
+                                        $rowPromo = $promo['items'][$loop->index] ?? null;
+                                        $lineDiscount = (float) ($rowPromo['discount'] ?? 0);
+                                    @endphp
                                     <div class="d-flex justify-content-between gap-2 py-2 border-bottom">
                                         <span class="small d-flex gap-2">
                                             @if ($checkoutPhoto)
@@ -216,10 +205,25 @@
                                             <span>
                                                 {{ $item['product']->name }}
                                             @if ($item['variant'])<span class="d-block text-muted-2">{{ $item['variant']->label() }}</span>@endif
-                                            <span class="text-muted-2">{{ $item['qty'] }} x {{ rupiah($item['price']) }}</span>
+                                            <span class="text-muted-2">
+                                                {{ $item['qty'] }} x
+                                                @if ($lineDiscount > 0)
+                                                    <span class="st-price-old">{{ rupiah($item['price']) }}</span>
+                                                    <span class="text-success">{{ rupiah($item['price'] - $lineDiscount / max(1, (int) $item['qty'])) }}</span>
+                                                @else
+                                                    {{ rupiah($item['price']) }}
+                                                @endif
+                                            </span>
                                             </span>
                                         </span>
-                                        <span class="font-money small text-nowrap">{{ rupiah($item['subtotal']) }}</span>
+                                        <span class="font-money small text-nowrap">
+                                            @if ($lineDiscount > 0)
+                                                <span class="st-price-old">{{ rupiah($item['subtotal']) }}</span>
+                                                <span class="text-success">{{ rupiah($item['subtotal'] - $lineDiscount) }}</span>
+                                            @else
+                                                {{ rupiah($item['subtotal']) }}
+                                            @endif
+                                        </span>
                                     </div>
                                 @endforeach
                             </div>
@@ -236,6 +240,7 @@
                                     </div>
                                 @endif
                                 <div class="d-flex justify-content-between mb-2"><span class="text-muted-2">Ongkir</span><span class="font-money" id="summary-shipping">{{ rupiah($shipping['cost']) }}</span></div>
+                                <div class="d-flex justify-content-between mb-2"><span class="text-muted-2">Estimasi tiba</span><span id="shipping-eta-display">{{ $shipping['eta'] ?? store_profile()->shippingEta() }}</span></div>
                             </div>
 
                             <div class="card bg-light border-0 mt-3">
@@ -314,28 +319,30 @@
 
             document.querySelectorAll('input[name="address_id"]').forEach(function (radio) {
                 radio.addEventListener('change', toggleAddress);
-                radio.addEventListener('change', syncPostal);
             });
             toggleAddress();
 
-            function syncPostal() {
-                const checked = document.querySelector('input[name="address_id"]:checked');
-                const rates = document.getElementById('rates_postal');
-                if (checked && checked.dataset.postal && rates) {
-                    rates.value = checked.dataset.postal;
-                }
-            }
-            const manualPostal = document.getElementById('postal_code');
-            if (manualPostal) {
-                manualPostal.addEventListener('input', function () {
-                    const rates = document.getElementById('rates_postal');
-                    if (rates) rates.value = manualPostal.value;
-                });
-            }
-            syncPostal();
-
             const courier = document.getElementById('courier');
             const service = document.getElementById('service');
+            const zone = document.getElementById('shipping_zone');
+            const etaDisplay = document.getElementById('shipping-eta-display');
+            const etaMap = @json(store_profile()->shippingEtaZones());
+            const instantEta = @json(store_profile()->shippingInstantEta());
+
+            function updateEta() {
+                if (!etaDisplay) return;
+                const selected = service && service.value ? service.value : '';
+                if (selected.toLowerCase().indexOf('instant') !== -1) {
+                    etaDisplay.textContent = instantEta;
+                    return;
+                }
+                const key = zone && etaMap[zone.value] ? zone.value : 'default';
+                etaDisplay.textContent = etaMap[key] || etaMap.default || '5-7 hari';
+            }
+
+            if (zone) zone.addEventListener('change', updateEta);
+            if (service) service.addEventListener('change', updateEta);
+            updateEta();
 
             function filterService() {
                 if (!courier || !service) return;
@@ -395,85 +402,6 @@
             }
             tick();
             setInterval(tick, 1000);
-        })();
-        (function () {
-            const btn = document.getElementById('rates-check');
-            const postal = document.getElementById('rates_postal');
-            const feedback = document.getElementById('rates-feedback');
-            const service = document.getElementById('service');
-            const courier = document.getElementById('courier');
-            if (!btn || !postal || !service || !courier) return;
-
-            const money = function (n) { return 'Rp' + Number(n).toLocaleString('id-ID'); };
-
-            service.addEventListener('change', function () {
-                const opt = service.selectedOptions[0];
-                if (!opt || !opt.dataset.price) return;
-                const price = parseFloat(opt.dataset.price);
-                const base = parseFloat(document.getElementById('checkout-base').textContent) || 0;
-                document.getElementById('shipping-cost-display').textContent = money(price);
-                document.getElementById('summary-shipping').textContent = money(price);
-                document.getElementById('summary-total').textContent = money(base + price);
-                document.getElementById('shipping-note').innerHTML =
-                    'Ongkir <strong>real-time dari Biteship</strong>: ' + money(price) +
-                    (opt.dataset.etd ? ' · Estimasi ' + opt.dataset.etd : '') +
-                    '. Harga dihitung ulang server saat pesanan dibuat.';
-            });
-
-            btn.addEventListener('click', function () {
-                const code = postal.value.trim();
-                if (code.length < 5) {
-                    feedback.textContent = 'Masukkan kode pos tujuan yang valid.';
-                    feedback.className = 'small mt-2 text-danger';
-                    return;
-                }
-                feedback.textContent = 'Mencari tarif dari ekspedisi...';
-                feedback.className = 'small mt-2 text-muted-2';
-
-                fetch('{{ route('store.rates.check') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ postal_code: code })
-                })
-                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
-                .then(function (res) {
-                    if (!res.ok || !res.data.ok) {
-                        feedback.textContent = res.data.message || 'Tarif tidak tersedia.';
-                        feedback.className = 'small mt-2 text-danger';
-                        return;
-                    }
-                    const rates = res.data.rates;
-                    service.innerHTML = '<option value="">Pilih layanan</option>' + rates.map(function (x) {
-                        return '<option value="' + x.service + '" data-courier="' + x.courier +
-                            '" data-price="' + x.price + '" data-etd="' + x.etd + '">' +
-                            x.courier_name + ' · ' + x.service_name + ' — ' + money(x.price) +
-                            (x.etd ? ' (' + x.etd + ')' : '') + '</option>';
-                    }).join('');
-
-                    const first = rates[0];
-                    if (![...courier.options].some(function (o) { return o.value === first.courier; })) {
-                        const opt = document.createElement('option');
-                        opt.value = first.courier;
-                        opt.textContent = first.courier_name;
-                        courier.appendChild(opt);
-                    }
-                    courier.value = first.courier;
-                    courier.dispatchEvent(new Event('change'));
-                    service.value = first.service;
-                    service.dispatchEvent(new Event('change'));
-
-                    feedback.textContent = res.data.message;
-                    feedback.className = 'small mt-2 text-success';
-                })
-                .catch(function () {
-                    feedback.textContent = 'Gagal menghubungi layanan ongkir.';
-                    feedback.className = 'small mt-2 text-danger';
-                });
-            });
         })();
     </script>
 @endpush

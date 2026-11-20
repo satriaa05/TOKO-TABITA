@@ -293,4 +293,73 @@ class StoreProfile
 
         return $path !== '' ? asset($path) : '';
     }
+
+    // -----------------------------------------------------------------
+    // Pengiriman: tarif & estimasi bisa diatur Owner lewat settings.
+    // -----------------------------------------------------------------
+
+    /** @return array<string, float> */
+    public function shippingCosts(): array
+    {
+        $raw = $this->get('shipping_zones');
+        $zones = is_string($raw) ? json_decode($raw, true) : null;
+
+        if (! is_array($zones)) {
+            $zones = (array) config('pos.shipping.zones', []);
+        }
+
+        return array_map(static fn ($value) => (float) $value, $zones);
+    }
+
+    public function shippingDefaultCost(): float
+    {
+        return (float) $this->get('shipping_default_cost', config('pos.shipping.default', 17000));
+    }
+
+    public function shippingMaxCost(): float
+    {
+        return (float) $this->get('shipping_max_cost', config('pos.shipping.max_cost', 17000));
+    }
+
+    public function shippingFreeThreshold(): float
+    {
+        return (float) $this->get('shipping_free_threshold', config('pos.shipping.free_threshold', 300000));
+    }
+
+    /** @return array<string, string> */
+    public function shippingEtaZones(): array
+    {
+        $raw = $this->get('shipping_eta_zones');
+        $etas = is_string($raw) ? json_decode($raw, true) : null;
+
+        if (! is_array($etas)) {
+            $etas = [
+                'jakarta' => '1-2 hari',
+                'jawa_barat' => '2-3 hari',
+                'jawa_tengah' => '3-5 hari',
+                'jawa_timur' => '4-6 hari',
+                'luar_jawa' => '5-7 hari',
+                'default' => '5-7 hari',
+            ];
+        }
+
+        return array_map(static fn ($value) => (string) $value, $etas);
+    }
+
+    public function shippingInstantEta(): string
+    {
+        return (string) $this->get('shipping_eta_instant', '1-3 jam');
+    }
+
+    public function shippingEta(?string $zone = null, ?string $service = null): string
+    {
+        if ($service !== null && str_contains(strtolower($service), 'instant')) {
+            return $this->shippingInstantEta();
+        }
+
+        $etas = $this->shippingEtaZones();
+        $key = $zone !== null && array_key_exists($zone, $etas) ? $zone : 'default';
+
+        return (string) ($etas[$key] ?? $etas['default'] ?? '5-7 hari');
+    }
 }

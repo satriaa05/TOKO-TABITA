@@ -113,6 +113,69 @@ class PromotionService
     }
 
     /**
+     * Harga efektif per produk untuk tampilan katalog/detail.
+     *
+     * @param  iterable<int, Product>  $products
+     * @return array<int, array{original: float, price: float, discount: float, promotion: ?string}>
+     */
+    public function priceMap(iterable $products): array
+    {
+        if (is_object($products) && method_exists($products, 'items')) {
+            $products = $products->items();
+        }
+
+        $products = collect($products);
+
+        if ($products->isEmpty()) {
+            return [];
+        }
+
+        $promotions = Promotion::query()->currentlyActive()->with('products:id')->get();
+
+        if ($promotions->isEmpty()) {
+            return [];
+        }
+
+        $map = [];
+
+        foreach ($products as $product) {
+            $price = (float) $product->sale_price;
+            $discount = 0.0;
+            $promotionName = null;
+            $promotionId = null;
+
+            foreach ($promotions as $promotion) {
+                if (! $promotion->products->contains('id', $product->id)) {
+                    continue;
+                }
+
+                if ($price < (float) $promotion->min_purchase) {
+                    continue;
+                }
+
+                $candidate = $this->discountFor($promotion, $price);
+
+                if ($candidate > $discount || ($candidate === $discount && $candidate > 0 && $promotionId !== null && $promotion->id < $promotionId)) {
+                    $discount = $candidate;
+                    $promotionName = $promotion->name;
+                    $promotionId = $promotion->id;
+                }
+            }
+
+            $discount = round(min($discount, $price), 2);
+
+            $map[$product->id] = [
+                'original' => $price,
+                'price' => round($price - $discount, 2),
+                'discount' => $discount,
+                'promotion' => $promotionName,
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
      * Nilai diskon dari sebuah promo untuk sebuah subtotal.
      */
     private function discountFor(Promotion $promotion, float $subtotal): float

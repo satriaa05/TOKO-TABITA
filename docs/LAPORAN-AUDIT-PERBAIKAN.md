@@ -305,7 +305,21 @@ Tersimpan di `docs/screenshots/`:
 - Route `admin.audit-logs.index` didaftarkan dengan `permission:reports.view` (Owner bypass),
   tersedia di navigasi Admin & Owner.
 - Test baru: `PaymentStateMachineTest` (6) + `PermissionDefaultDenyTest` (4).
-  Total **179 test / 860 assertions**.
+  Total **184 test / 888 assertions**.
+
+### N. Ongkir otomatis & promo Owner/Admin (20 Nov 2026)
+- UI **Cek Ongkir** dan teks penjelasannya di checkout dihapus. Kode pos tetap dikirim form;
+  ongkir dihitung penuh di server sehingga pembeli tidak bisa "mengintip" tarif sebelum checkout.
+- Ongkir default, batas maksimal, ambang gratis, tarif per wilayah, dan estimasi per wilayah
+  sekarang bisa diatur Owner di **Pengaturan Bisnis** (tabel `settings`, fallback `config/pos.php`).
+- Estimasi tampil untuk semua pengiriman di ringkasan checkout. Layanan **instant** memakai
+  format jam seperti e-commerce (default `1-3 jam`, bisa diatur).
+- Promo sekarang bisa dikelola **Admin & Owner** (`permission:promotions.manage`), menu Promo
+  tersedia di navigasi keduanya. Promo tetap otomatis aktif berdasarkan tanggal.
+- Harga promo tampil dengan coretan harga lama di home, katalog, detail produk, wishlist,
+  keranjang, dan checkout. Diskon per baris dihitung server, bukan dari browser.
+- Endpoint `/ongkir/cek` tidak dihapus agar test/internal tetap bekerja, tapi tidak ditampilkan.
+- Test baru: `PromotionTest` (3), `ShippingSettingsTest` (2). Total **184 test / 888 assertions**.
 
 ---
 

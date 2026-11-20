@@ -34,6 +34,8 @@
         .st-tile-sub { font-size: .66rem; color: var(--muted); }
         .st-product-img { width: 100%; aspect-ratio: .78; object-fit: cover; }
         .st-price { color: var(--rose); font-weight: 700; font-size: .95rem; }
+        .st-price-old { color: var(--muted); text-decoration: line-through; font-size: .72rem; margin-right: .3rem; }
+        .st-promo-badge { background: #c14b5a; color: #fff; font-size: .6rem; font-weight: 700; border-radius: .2rem; padding: .1rem .35rem; margin-left: .3rem; text-transform: uppercase; letter-spacing: .05em; }
         .st-btn { background: var(--rose); color: #fff; border: 0; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; border-radius: .3rem; padding: .45rem .8rem; display: inline-flex; align-items: center; gap: .35rem; text-decoration: none; transition: background .15s ease; }
         .st-btn:hover { background: var(--rose-dark); color: #fff; }
         .st-btn-soft { background: var(--blush2); color: var(--rose-dark); }

@@ -81,6 +81,8 @@ class StoreController extends Controller
             ->limit(8)
             ->get();
 
+        $priceMap = $this->promotions->priceMap($products);
+
         return view('store.home', compact(
             'logo',
             'banners',
@@ -88,6 +90,7 @@ class StoreController extends Controller
             'collections',
             'categories',
             'products',
+            'priceMap',
         ));
     }
 
@@ -121,7 +124,9 @@ class StoreController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('store.catalog', compact('products', 'categories', 'keyword', 'categoryId', 'sort'));
+        $priceMap = $this->promotions->priceMap($products);
+
+        return view('store.catalog', compact('products', 'categories', 'keyword', 'categoryId', 'sort', 'priceMap'));
     }
 
     /**
@@ -607,7 +612,10 @@ class StoreController extends Controller
             ->latest('id')
             ->paginate(12);
 
-        return view('store.wishlist', compact('items'));
+        $products = $items->pluck('product')->filter();
+        $priceMap = $this->promotions->priceMap($products);
+
+        return view('store.wishlist', compact('items', 'priceMap'));
     }
 
     /**
@@ -797,7 +805,9 @@ class StoreController extends Controller
 
         $waNumber = store_profile()->whatsappNumber();
 
-        return view('store.product', compact('product', 'chart', 'waNumber', 'gallery'));
+        $promoPrice = $this->promotions->priceMap(collect([$product]))[$product->id] ?? null;
+
+        return view('store.product', compact('product', 'chart', 'waNumber', 'gallery', 'promoPrice'));
     }
 
     /**
@@ -862,6 +872,7 @@ class StoreController extends Controller
             'shipping',
             'total',
             'count',
+            'promo',
         );
     }
 }

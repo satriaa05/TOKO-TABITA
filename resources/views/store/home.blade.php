@@ -187,7 +187,7 @@
                             @endif
                             <div class="p-2">
                                 <div class="st-tile-name"><a href="{{ route('store.product', $product) }}" class="text-decoration-none" style="color: var(--ink);">{{ $product->name }}</a></div>
-                                <div class="st-price mt-1">{{ rupiah($product->sale_price) }}</div>
+                                <div class="mt-1">@include('store.partials.price', ['product' => $product, 'promoPrice' => $priceMap[$product->id] ?? null])</div>
                                 <div class="small {{ $product->stock > 0 ? 'text-muted-2' : 'text-danger' }}">
                                     @if ($product->stock > 0) Stok: {{ $product->stock }} @else Stok habis @endif
                                 </div>

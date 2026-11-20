@@ -82,6 +82,6 @@ class RatesTest extends TestCase
         $quote = app(ShippingService::class)->quote('jawa_tengah', 200000, '50111', 'jne', 'REG');
 
         $this->assertSame('manual', $quote['source']);
-        $this->assertNull($quote['eta']);
+        $this->assertSame('3-5 hari', $quote['eta']);
     }
 }

@@ -44,7 +44,7 @@
                                 <div class="fw-semibold text-truncate">
                                     <a href="{{ route('store.product', $product) }}" class="text-decoration-none" style="color: var(--ink);">{{ $product->name }}</a>
                                 </div>
-                                <div class="st-price">{{ rupiah($product->sale_price) }}</div>
+                                <div>@include('store.partials.price', ['product' => $product, 'promoPrice' => $priceMap[$product->id] ?? null])</div>
                                 <div class="small text-muted-2">Stok: {{ $product->stock }}</div>
                                 <form method="POST" action="{{ route('store.cart.add') }}" class="mt-2">
                                     @csrf

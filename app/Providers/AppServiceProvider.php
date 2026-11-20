@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\PaymentChannel;
 use App\Models\Product;
 use App\Services\StoreProfile;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -59,6 +61,29 @@ class AppServiceProvider extends ServiceProvider
             config([
                 'filesystems.disks.public.url' => rtrim(URL::to('/'), '/').'/storage',
             ]);
+        }
+
+        // Saat kredensial Midtrans tersedia, otomatis aktifkan kanal gateway yang
+        // sebelumnya hanya ditampilkan sebagai "Segera Hadir". Dijalankan sekali
+        // per hari supaya tidak query setiap request.
+        if (filled(config('payments.midtrans.server_key'))) {
+            Cache::remember('midtrans.channels.activated', 86400, function () {
+                try {
+                    PaymentChannel::query()
+                        ->where('provider', 'midtrans')
+                        ->where('status', 'coming_soon')
+                        ->update([
+                            'status' => 'available',
+                            'is_active' => true,
+                            'is_visible' => true,
+                            'status_note' => null,
+                        ]);
+                } catch (\Throwable) {
+                    // Database belum siap saat instalasi; diulang siklus berikutnya.
+                }
+
+                return true;
+            });
         }
     }
 }

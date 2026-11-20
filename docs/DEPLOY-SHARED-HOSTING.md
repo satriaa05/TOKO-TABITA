@@ -172,6 +172,7 @@ php artisan migrate --force
 
 # Seeder esensial (WAJIB): metode pembayaran + permission Admin
 php artisan db:seed --class=PaymentChannelSeeder --force
+# Hak akses (WAJIB dijalankan ulang setiap ada permission baru, mis. promotions.manage)
 php artisan db:seed --class=PermissionSeeder --force
 
 # Jangan jalankan DatabaseSeeder di produksi: itu akun & produk demo.

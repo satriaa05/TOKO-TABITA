@@ -44,7 +44,8 @@ class CheckoutModernTest extends TestCase
             ->assertSee('Transfer Bank')
             ->assertSee('Total Pembayaran');
 
-        $response->assertDontSee('QRIS');
+        $response->assertDontSee('name="payment_method" value="qris"', false)
+            ->assertSee('Segera Hadir');
     }
 
     public function test_checkout_dengan_alamat_tersimpan_membuat_relasi_lengkap(): void

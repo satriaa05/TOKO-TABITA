@@ -316,6 +316,19 @@
                     </div>
                 </div>
 
+                <div class="row g-3 mt-3">
+                    <div class="col-12 col-md-6">
+                        <label for="store_latitude" class="form-label small">Latitude Toko (fallback peta)</label>
+                        <input type="number" step="any" class="form-control form-control-sm" id="store_latitude"
+                               name="store_latitude" value="{{ old('store_latitude', $profile->storeLatitude()) }}">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="store_longitude" class="form-label small">Longitude Toko (fallback peta)</label>
+                        <input type="number" step="any" class="form-control form-control-sm" id="store_longitude"
+                               name="store_longitude" value="{{ old('store_longitude', $profile->storeLongitude()) }}">
+                    </div>
+                </div>
+
                 <div class="mt-3">
                     <label for="shipping_zones" class="form-label small">Tarif per wilayah (JSON)</label>
                     <textarea class="form-control form-control-sm" id="shipping_zones" name="shipping_zones" rows="4">{{ old('shipping_zones', json_encode($profile->shippingCosts())) }}</textarea>

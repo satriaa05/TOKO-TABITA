@@ -71,6 +71,7 @@
                         @else
                             @php
                                 $bank = config('payments.bank_transfer', []);
+                                $channel = $transaction?->channel;
                             @endphp
                             <div class="st-pay-amount text-center mb-4">
                                 <span class="d-block small text-muted-2">Total yang harus dibayar</span>
@@ -80,9 +81,9 @@
                             <div class="row g-2 small">
                                 <div class="col-12 col-md-6"><span class="text-muted-2">Nomor pesanan</span><br><strong>{{ $sale->invoice_number }}</strong></div>
                                 <div class="col-12 col-md-6"><span class="text-muted-2">Metode</span><br><strong>{{ $transaction?->channel?->name ?? 'Transfer Bank' }}</strong></div>
-                                <div class="col-12 col-md-4"><span class="text-muted-2">Bank</span><br><strong>{{ $bank['bank_name'] ?: '-' }}</strong></div>
-                                <div class="col-12 col-md-4"><span class="text-muted-2">Pemilik rekening</span><br><strong>{{ $bank['account_holder'] ?: '-' }}</strong></div>
-                                <div class="col-12 col-md-4"><span class="text-muted-2">Nomor rekening</span><br><strong>{{ $bank['account_number'] ?: '-' }}</strong></div>
+                                <div class="col-12 col-md-4"><span class="text-muted-2">Bank</span><br><strong>{{ $channel?->bank_name ?: ($bank['bank_name'] ?? '-') }}</strong></div>
+                                <div class="col-12 col-md-4"><span class="text-muted-2">Pemilik rekening</span><br><strong>{{ $channel?->account_holder ?: ($bank['account_holder'] ?? '-') }}</strong></div>
+                                <div class="col-12 col-md-4"><span class="text-muted-2">Nomor rekening</span><br><strong class="font-money">{{ $channel?->account_number ?: ($bank['account_number'] ?? '-') }}</strong></div>
                             </div>
 
                             <div class="alert alert-light border small mt-3 mb-0">

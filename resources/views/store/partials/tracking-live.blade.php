@@ -17,7 +17,7 @@
         <div class="col-6"><span class="text-muted-2">Estimasi tiba</span><br><strong>{{ $shipment->shipping_eta ?: ($shipment->etaLabel() ?? 'Belum tersedia') }}</strong></div>
         <div class="col-6"><span class="text-muted-2">Update terakhir</span><br><strong>{{ $shipment->last_scan_at?->translatedFormat('d M Y H:i') ?? $shipment->last_synced_at?->translatedFormat('d M Y H:i') ?? '-' }}</strong></div>
         <div class="col-12">
-            <span class="text-muted-2">Lokasi terakhir:</span>
+            <span class="text-muted-2">Lokasi scan terakhir:</span>
             <strong>{{ $shipment->last_scan_location ?: 'Belum ada data lokasi' }}</strong>
         </div>
     </div>

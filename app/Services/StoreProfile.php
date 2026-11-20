@@ -351,6 +351,22 @@ class StoreProfile
         return (string) $this->get('shipping_eta_instant', '1-3 jam');
     }
 
+    public function storeLatitude(): float
+    {
+        return (float) $this->get('store_latitude', config('shipping.maps.store_latitude', -6.9656495));
+    }
+
+    public function storeLongitude(): float
+    {
+        return (float) $this->get('store_longitude', config('shipping.maps.store_longitude', 110.4271369));
+    }
+
+    /** @return array{lat: float, lng: float} */
+    public function storeCoordinate(): array
+    {
+        return ['lat' => $this->storeLatitude(), 'lng' => $this->storeLongitude()];
+    }
+
     public function shippingEta(?string $zone = null, ?string $service = null): string
     {
         if ($service !== null && str_contains(strtolower($service), 'instant')) {

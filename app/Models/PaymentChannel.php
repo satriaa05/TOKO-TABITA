@@ -24,9 +24,15 @@ class PaymentChannel extends Model
         'name',
         'provider',
         'mode',
+        'bank_name',
+        'account_holder',
+        'account_number',
         'logo_path',
         'description',
         'is_active',
+        'is_visible',
+        'status',
+        'status_note',
         'sort_order',
     ];
 
@@ -34,18 +40,44 @@ class PaymentChannel extends Model
     {
         return [
             'is_active' => 'boolean',
+            'is_visible' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
 
     public function transactions(): HasMany
     {
-        return $this->hasMany(PaymentTransaction::class);
+        return $this->hasMany(PaymentTransaction::class, 'payment_method_id');
     }
 
     public function isAutomatic(): bool
     {
         return $this->mode === 'automatic';
+    }
+
+    public function isComingSoon(): bool
+    {
+        return $this->status === 'coming_soon';
+    }
+
+    public function bankDetails(): string
+    {
+        $parts = array_filter([
+            $this->bank_name,
+            $this->account_number ? 'No. '.$this->account_number : null,
+            $this->account_holder ? 'a.n. '.$this->account_holder : null,
+        ]);
+
+        return $parts ? implode(' · ', $parts) : '-';
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Collection<int, static> */
+    public static function visibleChannels()
+    {
+        return static::query()
+            ->where('is_visible', true)
+            ->orderBy('sort_order')
+            ->get();
     }
 
     public function logoUrl(): ?string

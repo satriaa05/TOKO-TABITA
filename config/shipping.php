@@ -36,6 +36,8 @@ return [
         'tile_url' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         'attribution' => '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
         'user_agent' => env('TABITA_MAPS_USER_AGENT', 'TabitaModiste/1.0 (local development)'),
+        'store_latitude' => (float) env('TABITA_STORE_LATITUDE', -6.9656495),
+        'store_longitude' => (float) env('TABITA_STORE_LONGITUDE', 110.4271369),
     ],
 
     /*

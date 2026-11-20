@@ -92,14 +92,25 @@ class PaymentChannelSeeder extends Seeder
         $gatewayReady = filled(config('payments.midtrans.server_key'));
 
         foreach ($channels as $index => $channel) {
-            // Metode otomatis hanya aktif setelah kredensial Midtrans diisi.
-            if ($channel['mode'] === 'automatic') {
-                $channels[$index]['is_active'] = $gatewayReady;
+            $isAutomatic = $channel['mode'] === 'automatic';
+
+            $channels[$index]['is_active'] = $isAutomatic ? $gatewayReady : true;
+            $channels[$index]['is_visible'] = true;
+            $channels[$index]['status'] = $isAutomatic && ! $gatewayReady ? 'coming_soon' : 'available';
+            $channels[$index]['status_note'] = $isAutomatic && ! $gatewayReady
+                ? 'Menunggu kredensial Midtrans dari Admin.'
+                : null;
+
+            if ($channel['code'] === 'transfer') {
+                $channels[$index]['bank_name'] = 'BCA';
+                $channels[$index]['account_holder'] = 'RETNO ADWIANTI';
+                $channels[$index]['account_number'] = '7963069288';
             }
         }
 
+        // firstOrCreate: tidak menimpa perubahan Owner (nama, rekening, status, urutan).
         foreach ($channels as $channel) {
-            PaymentChannel::query()->updateOrCreate(
+            PaymentChannel::query()->firstOrCreate(
                 ['code' => $channel['code']],
                 $channel
             );

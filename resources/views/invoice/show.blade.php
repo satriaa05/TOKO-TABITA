@@ -40,8 +40,6 @@
         .totals .grand { border-top: 2px solid #242020; font-weight: 700; font-size: 16px; margin-top: 6px; padding-top: 12px; }
         .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #e8f3ea; color: #2f6b43; font-size: 11px; font-weight: 700; }
         .badge.wait { background: #fff3d6; color: #8a6100; }
-        .footer { margin-top: 42px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        .signature { border-top: 1px solid #242020; padding-top: 8px; text-align: center; color: #77716f; }
         .note { margin-top: 24px; font-size: 11px; color: #77716f; line-height: 1.6; }
         .actions { max-width: 820px; margin: 0 auto 18px; display: flex; gap: 10px; }
         .btn { border: 0; border-radius: 6px; padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
@@ -178,7 +176,7 @@
                 <div>
                     <h3>Status Pengiriman</h3>
                     <p>{{ $shipment->shipment_status?->label() ?? '-' }}</p>
-                    @if ($shipment->last_scan_location)<p>Lokasi terakhir: {{ $shipment->last_scan_location }}</p>@endif
+                    @if ($shipment->last_scan_location)<p>Lokasi Scan Terakhir: {{ $shipment->last_scan_location }}</p>@endif
                     @if ($shipment->shipping_eta)<p>Estimasi: {{ $shipment->shipping_eta }}</p>@endif
                 </div>
             </div>
@@ -189,10 +187,6 @@
             Invoice ini dicetak otomatis dari sistem Tabita Modiste pada {{ now()->translatedFormat('d F Y H:i') }} WIB.
         </div>
 
-        <div class="footer">
-            <div class="signature">Pembeli<br><br><br>( {{ $sale->buyer_name ?: '-' }} )</div>
-            <div class="signature">Tabita Modiste<br><br><br>( Owner )</div>
-        </div>
     </div>
 </body>
 </html>

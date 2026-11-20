@@ -234,6 +234,8 @@ class StoreController extends Controller
             ->latest('id')
             ->get();
         $data['paymentChannels'] = PaymentChannel::activeChannels();
+        $data['upcomingChannels'] = PaymentChannel::visibleChannels()
+            ->reject(fn ($channel) => $channel->is_active);
         $data['couriers'] = (array) config('shipping.couriers', []);
 
         $voucher = $this->sessionVoucher();

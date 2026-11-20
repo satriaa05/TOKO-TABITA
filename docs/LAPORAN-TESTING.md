@@ -2,7 +2,7 @@
 
 > Tanggal: 18 November 2026  
 > Perintah (dengan GD): `& 'C:\Users\LENOVO\php-8.5-gd\php.exe' artisan test` di **PowerShell** — PHP **8.5.12 + GD aktif**.  
-> Hasil terakhir (19 November 2026): **184 test · 184 passed · 0 skipped · 888 assertions**  
+> Hasil terakhir (19 November 2026): **189 test · 189 passed · 0 skipped · 917 assertions**  
 > (mencakup state machine pembayaran, default-deny permission, dan audit log)
 
 ---
@@ -11,7 +11,7 @@
 
 | Status | Jumlah | Keterangan |
 |---|---|---|
-| **PASS** | 184 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
+| **PASS** | 189 | Semua test otomatis yang dijalankan lolos (dengan GD aktif) |
 | **FAIL** | 0 | Tidak ada test yang gagal |
 | **SKIPPED** | 0 | Tidak ada test yang diskip setelah GD diaktifkan |
 | **BLOCKED** | 6 skenario live | Butuh kredensial Midtrans/Biteship/Resend; peta gratis sudah aktif |
@@ -109,7 +109,7 @@ php artisan view:clear
 Ringkasan akhir akan muncul seperti:
 
 ```
-Tests: 184 passed (888 assertions)
+Tests: 189 passed (917 assertions)
 ```
 
 ---
@@ -221,6 +221,23 @@ stok tidak cukup. Tidak ada HTTP 500, invoice tidak duplikat, stok tidak minus. 
 
 Endpoint `/ongkir/cek` sengaja dipertahankan untuk kebutuhan server/internal & test lama,
 tetapi tidak lagi ditampilkan ke pembeli di checkout.
+
+---
+
+## 12. Metode pembayaran & geocoding instan (20 November 2026) — PASS
+
+| Perubahan | Status | Bukti |
+|---|---|---|
+| Tanda tangan Pembeli/Owner di bawah invoice dihapus | **PASS** | `invoice/show.blade.php` |
+| Label "Lokasi Terakhir" diganti "Lokasi Scan Terakhir" | **PASS** | admin order, invoice, tracking partial |
+| QRIS/e-wallet/ShopeePay/VA tampil sebagai "Segera Hadir" walau API kosong | **PASS** | `CheckoutModernTest`, `PaymentChannelSeeder` |
+| Rekening BCA 7963069288 a.n. RETNO ADWIANTI tersimpan & tampil | **PASS** | `PaymentChannelCrudTest` |
+| Owner tambah/edit/hapus semua metode pembayaran | **PASS** | `PaymentChannelCrudTest` (4 test) |
+| Geocode asal gagal → fallback koordinat toko Semarang | **PASS** | `TrackingTest::test_pesanan_grab_instan_mengirim_koordinat_asli_ke_biteship` |
+| Pesan error geocoding menyebut tujuan, bukan hanya alamat pembeli | **PASS** | `BiteshipService::createOrder()` |
+
+> Untuk produksi, jalankan ulang `PaymentChannelSeeder` & `PermissionSeeder` setelah pull
+> agar permission dan rekening default terisi.
 
 > QRIS live tetap **BLOCKED** sampai kredensial Midtrans diisi.
 

@@ -198,7 +198,7 @@ tests/Feature/... (lihat daftar di bagian 4)
 cd "C:\Users\LENOVO\Documents\TOKO TABITA"
 php -v                       # harus 8.5.x
 npm run build                # sudah pernah dijalankan; public/build ada
-php artisan test             # 184 passed, 888 assertions
+php artisan test             # 189 passed, 917 assertions
 php artisan view:clear
 php artisan serve
 npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhook
@@ -260,7 +260,7 @@ npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhoo
 - Scheduler `payments:sync-pending` menutup celah webhook yang tidak sampai.
 - Permission default-deny; Admin tanpa `role_permissions` tidak mendapat akses.
 - Jejak Audit tersedia di `/admin/audit-log` untuk Admin & Owner.
-- Test: **184 passed / 888 assertions**.
+- Test: **189 passed / 917 assertions**.
 
 ---
 
@@ -273,4 +273,17 @@ npx cloudflared tunnel --url http://localhost:8000   # HTTPS gratis untuk webhoo
 - Promo bisa dibuat Admin **dan** Owner; otomatis aktif sesuai tanggal.
 - Harga lama dicoret dan diganti harga promo di katalog, detail, wishlist, keranjang, checkout.
 - Screenshot: `docs/screenshots/promo-coret-harga.png`.
+
+---
+
+## 15. Metode pembayaran & geocoding (20 Nov 2026)
+
+- Invoice tidak lagi memuat tanda tangan Pembeli/Owner.
+- "Lokasi Terakhir" diganti "Lokasi Scan Terakhir" supaya tidak disangka lokasi pembeli.
+- QRIS, GoPay, OVO, DANA, ShopeePay, dan VA tampil sebagai **Segera Hadir** sebelum API diisi.
+- Rekening BCA `7963069288` a.n. `RETNO ADWIANTI` aktif untuk transfer manual.
+- Owner bisa tambah/edit/hapus semua metode pembayaran di menu **Metode Pembayaran**.
+- Grab Instan tidak lagi error geocoding di area Semarang: ada fallback koordinat toko
+  dan string asal yang dinormalisasi.
+- Test: **189 passed / 917 assertions**.
 

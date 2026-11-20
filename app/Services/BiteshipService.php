@@ -137,11 +137,13 @@ class BiteshipService
         $maxKm = (float) config('shipping.instant_max_km', 30);
 
         if ($this->maps->isConfigured()) {
-            $originText = trim(store_profile()->location().' '.$origin.' Indonesia');
-            $destinationText = trim($destinationPostal.', Indonesia');
-
-            $from = $this->maps->geocode($originText);
-            $to = $this->maps->geocode($destinationText);
+            $store = store_profile();
+            $from = $this->geocodeFirst([
+                trim($store->location().' '.$origin),
+                $store->location(),
+                $origin.', Indonesia',
+            ]) ?? $store->storeCoordinate();
+            $to = $this->maps->geocode($destinationPostal.', Indonesia');
 
             if ($from && $to) {
                 return $this->distanceKm($from, $to) <= $maxKm;
@@ -243,11 +245,22 @@ class BiteshipService
 
         // Grab Instan membutuhkan koordinat asli (Biteship tidak menerima kode pos untuk instant).
         if (! empty($catalog[$shipment->courier]['instant'])) {
-            $from = $this->maps->geocode(trim(store_profile()->location().' '.$originPostal.' Indonesia'));
-            $to = $this->maps->geocode(trim($sale->buyer_address.' '.$destinationPostal));
+            $from = $this->geocodeFirst([
+                trim($store->location().' '.$originPostal),
+                $store->location(),
+                $originPostal.', Indonesia',
+            ]) ?? $store->storeCoordinate();
 
-            if (! $from || ! $to) {
-                throw new PaymentGatewayException('Lokasi asal/tujuan belum bisa ditentukan oleh layanan peta gratis. Periksa kembali alamat pembeli.');
+            $to = $this->geocodeFirst([
+                trim($sale->buyer_address.' '.$destinationPostal),
+                $destinationPostal.', Indonesia',
+                (string) $sale->buyer_address,
+            ]);
+
+            if ($to === null) {
+                throw new PaymentGatewayException(
+                    'Alamat tujuan belum bisa dikenali peta. Periksa alamat & kode pos pembeli ('.$destinationPostal.').'
+                );
             }
 
             $payload['origin_coordinate'] = $from;
@@ -514,6 +527,26 @@ class BiteshipService
                 ]
             );
         }
+    }
+
+    /** @param  array<int, string>  $candidates */
+    private function geocodeFirst(array $candidates): ?array
+    {
+        foreach ($candidates as $candidate) {
+            $candidate = trim((string) $candidate);
+
+            if ($candidate === '') {
+                continue;
+            }
+
+            $point = $this->maps->geocode($candidate);
+
+            if ($point !== null) {
+                return $point;
+            }
+        }
+
+        return null;
     }
 
     private function validLat(mixed $value): ?float

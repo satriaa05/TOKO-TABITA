@@ -250,6 +250,51 @@ class TrackingTest extends TestCase
         $this->assertTrue($shipment->fresh()->last_synced_at->greaterThan($oldSync));
     }
 
+    public function test_pesanan_grab_instan_mengirim_koordinat_asli_ke_biteship(): void
+    {
+        config()->set('shipping.biteship.api_key', 'test-key');
+
+        Http::fake([
+            'https://nominatim.openstreetmap.org/search*' => Http::response([
+                ['lat' => '-6.9000', 'lon' => '110.4000'],
+            ], 200),
+            'https://api.biteship.com/v1/orders' => Http::response([
+                'id' => 'BS-INSTANT',
+                'courier' => ['waybill_id' => 'WYB-INSTANT', 'tracking_id' => 'TRACK-INSTANT'],
+            ], 200),
+            'https://api.biteship.com/v1/orders/BS-INSTANT' => Http::response([
+                'id' => 'BS-INSTANT',
+                'status' => 'confirmed',
+                'courier' => ['waybill_id' => 'WYB-INSTANT', 'history' => []],
+            ], 200),
+        ]);
+
+        $sale = $this->makePaidSale();
+        $shipment = Shipment::create([
+            'sale_id' => $sale->id,
+            'courier' => 'grab',
+            'service' => 'instant',
+            'tracking_number' => null,
+            'shipment_status' => ShipmentStatus::Pending->value,
+        ]);
+
+        $result = app(BiteshipService::class)->sync($shipment);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('BS-INSTANT', $shipment->fresh()->biteship_order_id);
+
+        Http::assertSent(function ($request) {
+            if ($request->method() !== 'POST' || $request->url() !== 'https://api.biteship.com/v1/orders') {
+                return false;
+            }
+
+            $data = $request->data();
+
+            return isset($data['origin_coordinate']['lat'], $data['destination_coordinate']['lat'])
+                && ! isset($data['origin_postal_code'], $data['destination_postal_code']);
+        });
+    }
+
     public function test_webhook_biteship_signature_invalid_ditolak(): void
     {
         $this->postJson('/shipping/biteship/webhook', ['event' => 'order.status'], [

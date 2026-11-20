@@ -16,6 +16,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Owner\MonitoringController;
 use App\Http\Controllers\Owner\OwnerDashboardController;
 use App\Http\Controllers\Owner\OwnerReportController;
+use App\Http\Controllers\Owner\PaymentChannelController;
 use App\Http\Controllers\Owner\StoreSettingController;
 use App\Http\Controllers\Owner\UserController;
 use App\Http\Controllers\Payment\MidtransWebhookController;
@@ -340,6 +341,11 @@ Route::middleware(['auth', 'active'])->group(function () {
             |------------------------------------------------------------------*/
             Route::get('pengaturan', [StoreSettingController::class, 'index'])->middleware('permission:settings.manage')->name('settings.index');
             Route::put('pengaturan', [StoreSettingController::class, 'update'])->middleware('permission:settings.manage')->name('settings.update');
+
+            Route::resource('pembayaran-metode', PaymentChannelController::class)
+                ->except(['show'])
+                ->middleware('permission:settings.manage')
+                ->names('payment-channels');
 
             /*------------------------------------------------------------------
             | Manajemen akun & permission (khusus Owner)

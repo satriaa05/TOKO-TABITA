@@ -179,6 +179,30 @@
                                     Belum ada metode pembayaran aktif. Hubungi Admin toko.
                                 </div>
                             @endforelse
+
+                            @if ($upcomingChannels->isNotEmpty())
+                                <div class="mt-3 pt-3 border-top">
+                                    <div class="small fw-semibold text-muted-2 mb-2">
+                                        <i class="bi bi-clock-history" aria-hidden="true"></i> Segera Hadir
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach ($upcomingChannels as $channel)
+                                            <span class="border rounded px-2 py-1 small d-inline-flex align-items-center gap-2"
+                                                  title="{{ $channel->status_note }}">
+                                                @if ($channel->logo_path)
+                                                    <img src="{{ $channel->logoUrl() }}" alt="" style="height:16px;width:auto;">
+                                                @endif
+                                                <span>{{ $channel->name }}</span>
+                                                <span class="badge text-bg-secondary">Segera Hadir</span>
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        Metode di atas akan aktif otomatis setelah kredensial payment gateway diisi Admin.
+                                    </div>
+                                </div>
+                            @endif
+
                             @error('payment_method')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
                         </div>
                     </div>

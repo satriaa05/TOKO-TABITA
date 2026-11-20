@@ -234,6 +234,9 @@ class RouteHealthMatrixTest extends TestCase
             'laporan inventory' => '/owner/laporan/inventori',
             'laporan laba kotor' => '/owner/laporan/laba-kotor',
             'pengaturan bisnis' => '/owner/pengaturan',
+            'metode pembayaran' => '/owner/pembayaran-metode',
+            'tambah metode pembayaran' => '/owner/pembayaran-metode/create',
+            'edit metode pembayaran' => '/owner/pembayaran-metode/1/edit',
         ];
     }
 

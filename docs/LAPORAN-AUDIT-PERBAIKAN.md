@@ -305,7 +305,7 @@ Tersimpan di `docs/screenshots/`:
 - Route `admin.audit-logs.index` didaftarkan dengan `permission:reports.view` (Owner bypass),
   tersedia di navigasi Admin & Owner.
 - Test baru: `PaymentStateMachineTest` (6) + `PermissionDefaultDenyTest` (4).
-  Total **184 test / 888 assertions**.
+  Total **189 test / 917 assertions**.
 
 ### N. Ongkir otomatis & promo Owner/Admin (20 Nov 2026)
 - UI **Cek Ongkir** dan teks penjelasannya di checkout dihapus. Kode pos tetap dikirim form;
@@ -319,7 +319,19 @@ Tersimpan di `docs/screenshots/`:
 - Harga promo tampil dengan coretan harga lama di home, katalog, detail produk, wishlist,
   keranjang, dan checkout. Diskon per baris dihitung server, bukan dari browser.
 - Endpoint `/ongkir/cek` tidak dihapus agar test/internal tetap bekerja, tapi tidak ditampilkan.
-- Test baru: `PromotionTest` (3), `ShippingSettingsTest` (2). Total **184 test / 888 assertions**.
+- Test baru: `PromotionTest` (3), `ShippingSettingsTest` (2). Total **189 test / 917 assertions**.
+
+### O. Metode pembayaran & geocoding instan (20 Nov 2026)
+- Tanda tangan di invoice dihapus; label lokasi scan diperjelas.
+- `payment_methods` ditambah `is_visible`, `status`, `status_note`, dan field rekening.
+- QRIS/e-wallet/ShopeePay/VA tampil sebagai **Segera Hadir** tanpa bisa dipilih sebelum API ada.
+- Rekening BCA `7963069288` a.n. `RETNO ADWIANTI` tersimpan di seeder/migrasi dan tampil di halaman bayar.
+- Owner mendapat CRUD penuh metode pembayaran di `/owner/pembayaran-metode`.
+- `PaymentChannelSeeder` kini `firstOrCreate` agar tidak menimpa edit Owner.
+- Geocoding Grab Instan: string asal dinormalisasi, fallback koordinat toko Semarang,
+  error dibedakan asal/tujuan. Test order instant memastikan `origin_coordinate` &
+  `destination_coordinate` dikirim ke Biteship.
+- Test baru: `PaymentChannelCrudTest` (4), `TrackingTest` (1). Total **189 test / 917 assertions**.
 
 ---
 

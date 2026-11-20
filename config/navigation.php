@@ -154,6 +154,10 @@ return [
             'type' => 'item', 'label' => 'Pengaturan Bisnis', 'icon' => 'bi-gear',
             'route' => 'owner.settings.index',
         ],
+        [
+            'type' => 'item', 'label' => 'Metode Pembayaran', 'icon' => 'bi-credit-card',
+            'route' => 'owner.payment-channels.index',
+        ],
     ],
 
 ];

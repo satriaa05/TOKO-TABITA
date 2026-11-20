@@ -133,7 +133,7 @@
                             @endif
                         </dd>
 
-                        <dt class="col-4 col-md-3">Lokasi Terakhir</dt>
+                        <dt class="col-4 col-md-3">Lokasi Scan Terakhir</dt>
                         <dd class="col-8 col-md-9">{{ $shipment?->last_scan_location ?: 'Belum ada data lokasi' }}</dd>
 
                         <dt class="col-4 col-md-3">Catatan Pembeli</dt>

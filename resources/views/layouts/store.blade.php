@@ -98,6 +98,18 @@
         @media (max-width: 575.98px) { .store-section-title { font-size: 1.3rem; } .st-wpp::after { display: none; } }
         @media (prefers-reduced-motion: reduce) { .store-card, .st-wpp, .st-footer-social { transition: none; } .store-card:hover, .st-wpp:hover { transform: none; } }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+        /* Angka/nominal pakai font sans rapi & digit sejajar (tidak melompat). */
+        .st-price,
+        .st-price-lg,
+        .st-price-old,
+        .font-money,
+        .st-summary-items .font-money {
+            font-family: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif !important;
+            font-variant-numeric: tabular-nums !important;
+            font-feature-settings: "tnum" !important;
+            letter-spacing: 0 !important;
+        }
     </style>
 
     @stack('styles')

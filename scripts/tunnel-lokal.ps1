@@ -87,14 +87,14 @@ $err = Join-Path $env:TEMP "tabita-tunnel-$stamp.err"
 
 Write-Host "Menjalankan Cloudflare Tunnel (first run bisa download cloudflared)..."
 Start-Process -FilePath 'npx.cmd' `
-    -ArgumentList 'cloudflared tunnel --url http://127.0.0.1:8000' `
+    -ArgumentList '--yes','cloudflared','tunnel','--url','http://127.0.0.1:8000' `
     -RedirectStandardOutput $log `
     -RedirectStandardError $err `
     -WindowStyle Hidden
 
 # 5. Tunggu URL publik muncul dari log unik
 $url = $null
-for ($i = 0; $i -lt 60; $i++) {
+for ($i = 0; $i -lt 90; $i++) {
     Start-Sleep -Seconds 2
 
     $match = $null
@@ -113,6 +113,8 @@ for ($i = 0; $i -lt 60; $i++) {
 
 if (-not $url) {
     Write-Host "Gagal mendapat URL. Cek log: $err" -ForegroundColor Red
+    if (Test-Path $log) { Get-Content $log -Tail 15 }
+    if (Test-Path $err) { Get-Content $err -Tail 15 }
     exit 1
 }
 

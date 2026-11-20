@@ -9,13 +9,16 @@ Panduan ini dipakai **sambil menunggu hosting + domain dibeli**. Website bisa di
 | Item | Nilai |
 |---|---|
 | Server lokal | `http://127.0.0.1:8000` |
-| URL publik sementara | `https://silence-furniture-gale-sculpture.trycloudflare.com` |
-| Webhook Biteship | `https://silence-furniture-gale-sculpture.trycloudflare.com/shipping/biteship/webhook` |
+| URL publik sementara | `https://crowd-spiritual-rough-first.trycloudflare.com` (cek output script untuk nilai terbaru) |
+| Webhook Biteship | `https://crowd-spiritual-rough-first.trycloudflare.com/shipping/biteship/webhook` |
 | Header Signature Key | `Tabita-Modiste-Signature` |
 | Header Signature Secret | `<token dari BITESHIP_WEBHOOK_TOKEN>` |
 | Status verifikasi | ✅ Home `200`, ✅ Webhook `200 OK` |
 
-> URL `trycloudflare.com` **berubah hanya kalau tunnel dibuat ulang**. Script `tunnel-lokal.ps1` sekarang otomatis memakai ulang URL yang masih hidup, jadi tidak perlu daftar webhook ulang setiap kali script dijalankan.
+> URL `trycloudflare.com` **berubah setiap kali tunnel dibuat ulang**. Script `tunnel-lokal.ps1`
+> otomatis memakai ulang URL yang masih hidup; kalau mati, script membuat baru dan menampilkan
+> URL terbaru. **Selalu daftarkan ulang webhook Biteship memakai URL dari output script.**
+> Script memakai `npx --yes cloudflared` agar tidak menggantung pada prompt instalasi.
 
 > **Rotasi token:** secret webhook sudah diganti dan tidak lagi ditulis di dokumentasi/script.
 > Nilai aslinya hanya ada di `.env` (`BITESHIP_WEBHOOK_TOKEN`). Update header secret di dashboard
